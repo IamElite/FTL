@@ -151,6 +151,7 @@ async def media_preview(request: web.Request):
     try:
         path = request.match_info["path"]
         message_id, secure_hash = parse_media_request(path, request.query)
+        get_base_url(request)
 
         rendered_page = await render_page(
             message_id, secure_hash, request, requested_action='stream')
