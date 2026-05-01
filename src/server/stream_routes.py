@@ -280,7 +280,7 @@ async def media_delivery(request: web.Request):
                         break
                 
                 await resp.write_eof()
-            except (ConnectionResetError, asyncio.CancelledError):
+            except (ConnectionError, asyncio.CancelledError):
                 logger.debug(f"Stream interrupted for {path}")
             except AuthKeyUnregistered:
                 logger.error(f"Client ID {client_id} is unregistered during stream. Removing from pool.")
