@@ -21,9 +21,11 @@ from src.vars import Var
 
 def get_base_url(request=None):
     if request:
-        Var.URL = str(request.base_url).rstrip("/")
-    return Var.URL
-
+        base_url = str(request.base_url).rstrip("/")
+        if not Var.BASE_URL or Var.BASE_URL != base_url:
+            Var.BASE_URL = base_url
+        return base_url
+    return Var.BASE_URL or "https://t.me/SyntaxRealm"
 
 
 async def notify_ch(cli: Client, txt: str):
@@ -61,7 +63,6 @@ async def log_newusr(cli: Client, uid: int, fname: str):
 
 
 async def gen_links(fwd_msg: Message, request: Any = None, shortener: bool = True) -> Dict[str, str]:
-
     base_url = get_base_url(request)
     fid = fwd_msg.id
     m_name_raw = get_fname(fwd_msg)

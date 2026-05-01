@@ -54,7 +54,6 @@ class Var:
         logger.warning("WARNING: OWNER_ID is not set. No user will be granted owner access.")
 
     OWNER_USERNAME: str = os.getenv("OWNER_USERNAME", "")
-    URL: str = os.getenv("URL", "").rstrip("/")
 
 
     SET_COMMANDS: bool = str_to_bool(os.getenv("SET_COMMANDS", "True"))
@@ -99,3 +98,4 @@ class Var:
     RATE_LIMIT_PERIOD_MINUTES: int = int(os.getenv("RATE_LIMIT_PERIOD_MINUTES", "1"))
     MAX_QUEUE_SIZE: int = int(os.getenv("MAX_QUEUE_SIZE", "100"))
     SUPPORT_LINK: str = "https://t.me/SyntaxRealm"
+    BASE_URL: str = os.getenv("BASE_URL", "")
