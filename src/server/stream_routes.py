@@ -218,9 +218,6 @@ async def media_delivery(request: web.Request):
             start, end = parse_range_header(range_header, file_size)
             content_length = end - start + 1
 
-            if start == 0 and end == file_size - 1:
-                range_header = ""
-
             mime_type = (
                 file_info.get('mime_type') or 'application/octet-stream')
             filename = (
