@@ -186,7 +186,7 @@ async def media_delivery(request: web.Request):
             # Also keep the message object to reuse it for streaming
             logger.debug(f"Fetching message for ID {message_id}...")
             message = await asyncio.wait_for(
-                primary_streamer.get_message(message_id), timeout=15)
+                primary_streamer.get_message(message_id), timeout=30)
             file_info = primary_streamer.get_file_info_sync(message)
             logger.debug(f"Message fetched successfully for ID {message_id}")
             if not file_info.get('unique_id'):

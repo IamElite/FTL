@@ -23,8 +23,9 @@ class ByteStreamer:
         while retries < 5:
             try:
                 # Use a small internal timeout for the API call itself
+                logger.debug(f"Fetching message for ID {message_id}...")
                 message = await asyncio.wait_for(
-                    self.client.get_messages(self.chat_id, message_id), timeout=10)
+                    self.client.get_messages(self.chat_id, message_id), timeout=30)
                 break
             except asyncio.TimeoutError:
                 logger.debug(f"Timeout fetching message {message_id}, retrying...")
@@ -54,12 +55,17 @@ class ByteStreamer:
 
         while True:
             try:
+                logger.debug(f"Starting stream_media for message {message_id} at chunk {chunk_offset}")
                 async for chunk in self.client.stream_media(message, offset=chunk_offset, limit=chunk_limit):
                     yield chunk
+                logger.debug(f"Finished stream_media for message {message_id}")
                 break
             except FloodWait as e:
                 logger.debug(f"FloodWait: stream_file, sleep {e.value}s")
                 await asyncio.sleep(e.value)
+            except Exception as e:
+                logger.error(f"Error in stream_media for message {message_id}: {e}")
+                break
 
     def get_file_info_sync(self, message: Message) -> Dict[str, Any]:
         media = message.document or message.video or message.audio or message.photo
