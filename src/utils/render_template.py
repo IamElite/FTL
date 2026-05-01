@@ -10,6 +10,7 @@ from src.server.exceptions import InvalidHash
 from src.utils.bot_utils import get_base_url
 from src.utils.file_properties import get_fname, get_uniqid
 from src.utils.handler import handle_flood_wait
+from src.utils.human_readable import humanbytes
 from src.utils.logger import logger
 from src.vars import Var
 
@@ -48,6 +49,7 @@ async def render_page(id: int, secure_hash: str, request, requested_action: str 
                 'file_name': safe_filename,
                 'src': src,
                 'mime_type': mime_type,
+                'file_size': humanbytes(getattr(media, 'file_size', 0)),
                 'support_link': Var.SUPPORT_LINK
             }
         else:

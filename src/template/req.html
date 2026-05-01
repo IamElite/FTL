@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SyntaxRealm — Stream</title>
+    <title>{{ heading }}</title>
     <meta name="theme-color" content="#050505">
     <link rel="icon" href="https://i.ibb.co/3YdmmDj6/kpsbots-favicon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -130,14 +130,14 @@
         <div class="file-header">
             <div class="file-thumb"><i class="fas fa-film"></i></div>
             <div class="file-info">
-                <h1 class="file-name" id="fileName">Sample_Video_1080p.mp4</h1>
+                <h1 class="file-name" id="fileName">{{ file_name }}</h1>
                 <div class="file-tags">
                     <span class="tag tag-accent">Stream Ready</span>
                     <span class="tag tag-glass">HD 1080p</span>
                     <span class="tag tag-glass">MP4</span>
                 </div>
                 <div class="file-meta">
-                    <span class="meta"><i class="fas fa-weight-scale"></i> <span id="fSize">247 MB</span></span>
+                    <span class="meta"><i class="fas fa-weight-scale"></i> <span id="fSize">{{ file_size }}</span></span>
                     <span class="meta"><i class="fas fa-calendar"></i> <span id="fDate"></span></span>
                     <span class="meta"><i class="fas fa-shield-halved"></i> Secure</span>
                 </div>
@@ -147,7 +147,7 @@
         <div class="player-shell">
             <div class="player-aspect">
                 <video id="player" playsinline controls preload="metadata">
-                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                    <source src="{{ src }}" type="{{ mime_type }}">
                 </video>
             </div>
         </div>
@@ -172,7 +172,7 @@
             <a class="pcard" data-p="iina"><div class="pcard-icon"><i class="fas fa-circle-play" style="color:#14b8a6"></i></div><div class="pcard-info"><div class="pcard-name">IINA</div><div class="pcard-plat">macOS</div></div><div class="pcard-arrow"><i class="fas fa-arrow-right"></i></div></a>
         </div>
 
-        <div class="footer">⚡ Powered by <a href="https://t.me/SyntaxRealm" target="_blank" rel="noopener">SyntaxRealm</a> · © <span id="yr"></span></div>
+        <div class="footer">⚡ Powered by <a href="{{ support_link }}" target="_blank" rel="noopener">SyntaxRealm</a> · © <span id="yr"></span></div>
     </main>
 
     <div class="toast" id="toast"><div class="toast-ic"><i class="fas fa-check"></i></div><div class="toast-msg" id="toastMsg">Done</div></div>
@@ -239,4 +239,3 @@
     </script>
 </body>
 </html>
-
