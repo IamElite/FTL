@@ -50,8 +50,10 @@ class ByteStreamer:
             message = await self.get_message(message_id)
         
         
-        chunk_offset = offset // (1024 * 1024)
-        chunk_limit = (limit + (1024 * 1024) - 1) // (1024 * 1024) if limit > 0 else 0
+        # Telegram part size for large files is 512KB
+        PART_SIZE = 512 * 1024
+        chunk_offset = offset // PART_SIZE
+        chunk_limit = (limit + PART_SIZE - 1) // PART_SIZE if limit > 0 else 0
 
         while True:
             try:
