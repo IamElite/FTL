@@ -4,7 +4,7 @@ import asyncio
 from typing import Any, AsyncGenerator, Dict
 
 from pyrogram import Client
-from pyrogram.errors import FloodWait
+from pyrogram.errors import FloodWait, AuthKeyUnregistered
 from pyrogram.types import Message
 
 from src.server.exceptions import FileNotFound
@@ -65,6 +65,9 @@ class ByteStreamer:
             except FloodWait as e:
                 logger.debug(f"FloodWait: stream_file, sleep {e.value}s")
                 await asyncio.sleep(e.value)
+            except AuthKeyUnregistered:
+                # Re-raise so stream_routes can mark the client as dead
+                raise
             except Exception as e:
                 logger.error(f"Error in stream_media for message {message_id}: {e}")
                 break
