@@ -69,9 +69,7 @@ def parse_media_request(path: str, query: dict) -> tuple[int, str]:
 
 def select_optimal_client() -> tuple[int, ByteStreamer]:
     if not work_loads:
-        raise web.HTTPInternalServerError(
-            text=("No available clients to handle the request. "
-                  "Please try again later."))
+        return 0, get_streamer(0)
 
     available_clients = [
         (cid, load) for cid, load in work_loads.items()
@@ -176,11 +174,13 @@ async def media_delivery(request: web.Request):
         message_id, secure_hash = parse_media_request(path, request.query)
 
         client_id, streamer = select_optimal_client()
+        primary_streamer = get_streamer(0)
 
         work_loads[client_id] += 1
 
         try:
-            file_info = await streamer.get_file_info(message_id)
+            # Use primary streamer for fast metadata to avoid H12 timeout
+            file_info = await primary_streamer.get_file_info(message_id)
             if not file_info.get('unique_id'):
                 raise FileNotFound("File unique ID not found in info.")
 

@@ -19,7 +19,8 @@ class ByteStreamer:
         self.chat_id = int(Var.BIN_CHANNEL)
 
     async def get_message(self, message_id: int) -> Message:
-        while True:
+        retries = 0
+        while retries < 5:
             try:
                 message = await self.client.get_messages(self.chat_id, message_id)
                 break
@@ -27,8 +28,12 @@ class ByteStreamer:
                 logger.debug(f"FloodWait: get_message, sleep {e.value}s")
                 await asyncio.sleep(e.value)
             except Exception as e:
-                logger.debug(f"Error fetching message {message_id}: {e}", exc_info=True)
-                raise FileNotFound(f"Message {message_id} not found") from e
+                logger.debug(f"Error fetching message {message_id}: {e}")
+                retries += 1
+                await asyncio.sleep(1)
+        
+        if retries >= 5:
+            raise FileNotFound(f"Message {message_id} fetch failed after retries")
         
         if not message or not message.media:
             raise FileNotFound(f"Message {message_id} not found")
