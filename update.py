@@ -1,45 +1,76 @@
+import os
+import shutil
+import zipfile
+from urllib import request
 from os import path as opath, getenv, rename, remove
-from subprocess import run as srun
 from dotenv import load_dotenv
 from src.utils.logger import logger
 
 load_dotenv('config.env', override=True)
 
 UPSTREAM_REPO = getenv('UPSTREAM_REPO', "")
-UPSTREAM_BRANCH = getenv('UPSTREAM_BRANCH', "")
+UPSTREAM_BRANCH = getenv('UPSTREAM_BRANCH', "main")
 
 if UPSTREAM_REPO:
     config_backup = 'config.env.tmp'
+    zip_path = 'update.zip'
+    extract_path = 'temp_update'
     
     try:
+        # Backup config
         if opath.exists('config.env'):
             rename('config.env', config_backup)
         
-        if opath.exists('.git'):
-            srun(["rm", "-rf", ".git"])
+        # Build ZIP URL
+        # Convert https://github.com/user/repo to https://github.com/user/repo/archive/refs/heads/branch.zip
+        clean_repo = UPSTREAM_REPO.rstrip('/')
+        if clean_repo.endswith('.git'):
+            clean_repo = clean_repo[:-4]
+            
+        zip_url = f"{clean_repo}/archive/refs/heads/{UPSTREAM_BRANCH}.zip"
         
-        git_commands = (
-            f"git init -q && "
-            f"git config --global user.email SyntaxRealm@update.local && "
-            f"git config --global user.name SyntaxRealm && "
-            f"git add . && "
-            f"git commit -sm update -q && "
-            f"git remote add origin {UPSTREAM_REPO} && "
-            f"git fetch origin -q && "
-            f"git reset --hard origin/{UPSTREAM_BRANCH} -q"
-        )
+        logger.info(f"Downloading update from {zip_url}...")
         
-        result = srun(git_commands, shell=True)
+        # Download ZIP
+        request.urlretrieve(zip_url, zip_path)
         
-        if result.returncode == 0:
-            logger.info('Successfully updated with latest commit from UPSTREAM_REPO')
-        else:
-            logger.error('Something went wrong while updating, check UPSTREAM_REPO if valid or not!')
+        # Extract ZIP
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_path)
+        
+        # The zip usually contains a folder like "repo-branch"
+        # We need to find that folder and move its contents
+        root_folder = os.listdir(extract_path)[0]
+        root_path = os.path.join(extract_path, root_folder)
+        
+        for item in os.listdir(root_path):
+            s = os.path.join(root_path, item)
+            d = os.path.join('.', item)
+            if os.path.isdir(s):
+                if os.path.exists(d):
+                    shutil.rmtree(d)
+                shutil.move(s, d)
+            else:
+                if os.path.exists(d):
+                    os.remove(d)
+                shutil.move(s, d)
+        
+        logger.info('Successfully updated from UPSTREAM_REPO using ZIP extraction.')
+        
+    except Exception as e:
+        logger.error(f"Something went wrong while updating: {e}")
             
     finally:
+        # Restore config
         if opath.exists(config_backup):
             if opath.exists('config.env'):
                 remove('config.env')
             rename(config_backup, 'config.env')
+            
+        # Cleanup
+        if opath.exists(zip_path):
+            os.remove(zip_path)
+        if opath.exists(extract_path):
+            shutil.rmtree(extract_path)
 else:
     logger.info("UPSTREAM_REPO not found, skipping update.")
