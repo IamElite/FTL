@@ -1,0 +1,58 @@
+{
+  "name": "SyntaxRealm File To Link",
+  "description": "High-performance Telegram File-to-Link Bot with direct streaming and download support.",
+  "repository": "https://github.com/IamElite/FTL",
+  "logo": "https://graph.org/file/0ff9d5e94a070fe4154c0.jpg",
+  "keywords": [
+    "telegram",
+    "bot",
+    "file-to-link",
+    "stream",
+    "download"
+  ],
+  "env": {
+    "API_ID": {
+      "description": "Get this from https://my.telegram.org",
+      "required": true
+    },
+    "API_HASH": {
+      "description": "Get this from https://my.telegram.org",
+      "required": true
+    },
+    "BOT_TOKEN": {
+      "description": "Get this from @BotFather",
+      "required": true
+    },
+    "BIN_CHANNEL": {
+      "description": "Create a channel and get its ID",
+      "required": true
+    },
+    "OWNER_ID": {
+      "description": "Your Telegram User ID",
+      "required": true
+    },
+    "DATABASE_URL": {
+      "description": "MongoDB Connection String",
+      "required": true
+    },
+    "UPSTREAM_REPO": {
+      "description": "URL of the upstream repository",
+      "value": "https://github.com/IamElite/FTL"
+    },
+    "UPSTREAM_BRANCH": {
+      "description": "Branch to use for updates",
+      "value": "master"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "standard-2x"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ]
+}

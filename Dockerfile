@@ -20,4 +20,4 @@ RUN pip install --upgrade pip && \
 
 COPY . .
 
-CMD ["python", "-m", "KPS"]
+CMD ["sh", "SyntaxRealm.sh"]

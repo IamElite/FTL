@@ -1,1 +1,1 @@
-web: python -m KPS
+web: sh SyntaxRealm.sh
