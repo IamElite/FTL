@@ -41,7 +41,7 @@
     },
     "UPSTREAM_BRANCH": {
       "description": "Branch to use for updates",
-      "value": "master"
+      "value": "main"
     }
   },
   "formation": {
