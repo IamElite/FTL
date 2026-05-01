@@ -20,8 +20,8 @@ from src.server import web_server
 from src.utils.commands import set_commands
 from src.utils.database import db
 from src.utils.handler import handle_flood_wait
-from src.utils.keepalive import ping_server
 from src.utils.logger import logger
+
 from src.utils.messages import MSG_ADMIN_RESTART_DONE
 from src.utils.rate_limiter import rate_limiter, request_executor
 from src.utils.tokens import cleanup_expired_tokens
