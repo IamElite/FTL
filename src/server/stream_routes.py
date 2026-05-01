@@ -218,8 +218,9 @@ async def media_delivery(request: web.Request):
             start, end = parse_range_header(range_header, file_size)
             content_length = end - start + 1
 
-            mime_type = (
-                file_info.get('mime_type') or 'application/octet-stream')
+            mime_type = file_info.get('mime_type') or 'video/mp4'
+            if not mime_type.startswith(('video/', 'audio/')):
+                mime_type = 'video/mp4'
             filename = (
                 file_info.get('file_name') or f"file_{secrets.token_hex(4)}")
 
