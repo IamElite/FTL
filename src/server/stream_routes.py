@@ -123,9 +123,7 @@ async def root_redirect(request):
 
 @routes.get("/status", allow_head=True)
 async def status_endpoint(request):
-    get_base_url(request)
     uptime = time.time() - StartTime
-
     total_load = sum(work_loads.values())
 
     workload_distribution = {str(k): v for k, v in sorted(work_loads.items())}

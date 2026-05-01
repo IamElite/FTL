@@ -54,6 +54,7 @@ class Var:
         logger.warning("WARNING: OWNER_ID is not set. No user will be granted owner access.")
 
     OWNER_USERNAME: str = os.getenv("OWNER_USERNAME", "")
+    URL: str = os.getenv("URL", "").rstrip("/")
 
 
     SET_COMMANDS: bool = str_to_bool(os.getenv("SET_COMMANDS", "True"))

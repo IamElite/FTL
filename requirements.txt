@@ -1,9 +1,10 @@
 aiohttp
 cloudscraper
 Jinja2
-kurigram==2.2.6
+kurigram
 motor
 psutil
 python-dotenv
+requests
 tgcrypto
 uvloop==0.21.0

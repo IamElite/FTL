@@ -19,13 +19,10 @@ from src.utils.messages import (MSG_BUTTON_GET_HELP, MSG_DC_UNKNOWN,
 from src.utils.shortener import shorten
 from src.vars import Var
 
-_DISCOVERED_URL = os.getenv("URL", "").rstrip("/")
-
 def get_base_url(request=None):
-    global _DISCOVERED_URL
     if request:
-        _DISCOVERED_URL = str(request.base_url).rstrip("/")
-    return _DISCOVERED_URL
+        Var.URL = str(request.base_url).rstrip("/")
+    return Var.URL
 
 
 
@@ -64,8 +61,8 @@ async def log_newusr(cli: Client, uid: int, fname: str):
 
 
 async def gen_links(fwd_msg: Message, request: Any = None, shortener: bool = True) -> Dict[str, str]:
-    base_url = get_base_url(request)
 
+    base_url = get_base_url(request)
     fid = fwd_msg.id
     m_name_raw = get_fname(fwd_msg)
     m_name = m_name_raw.decode('utf-8', errors='replace') if isinstance(m_name_raw, bytes) else str(m_name_raw)
