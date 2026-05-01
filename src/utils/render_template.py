@@ -37,19 +37,25 @@ async def render_page(id: int, secure_hash: str, request, requested_action: str 
         base_url = get_base_url(request)
         src = urllib.parse.urljoin(base_url + "/", f'SyntaxRealm-{secure_hash}{id}/{quoted_filename}')
         
+        media = message.document or message.video or message.audio
+        mime_type = getattr(media, 'mime_type', 'video/mp4') if media else 'video/mp4'
+        
         safe_filename = html_module.escape(file_name)
         if requested_action == 'stream':
             template = template_env.get_template('req.html')
             context = {
-                'heading': f"View {safe_filename}",
+                'heading': f"Streaming: {safe_filename}",
                 'file_name': safe_filename,
-                'src': src
+                'src': src,
+                'mime_type': mime_type,
+                'support_link': Var.SUPPORT_LINK
             }
         else:
             template = template_env.get_template('dl.html')
             context = {
                 'file_name': safe_filename,
-                'src': src
+                'src': src,
+                'support_link': Var.SUPPORT_LINK
             }
         return await template.render_async(**context)
     except Exception as e:

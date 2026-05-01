@@ -51,7 +51,7 @@
         <main id="main-content">
             <section class="player-container" aria-label="Video Player">
                 <video id="player" playsinline preload="metadata" controlsList="nodownload" aria-label="Video player">
-                    <source src="{{ src }}" type="video/mp4" />
+                    <source src="{{ src }}" type="{{ mime_type }}" />
                     <p>Your browser does not support the video tag. Please <a href="{{ src }}" download>download the video</a> instead.</p>
                 </video>
             </section>
