@@ -24,8 +24,8 @@ CHUNK_SIZE = 1024 * 1024
 MAX_CONCURRENT_PER_CLIENT = 8
 RANGE_REGEX = re.compile(r"bytes=(?P<start>\d*)-(?P<end>\d*)")
 PATTERN_HASH_FIRST = re.compile(
-    rf"^([a-zA-Z0-9_-]{{{SECURE_HASH_LENGTH}}})(\d+)(?:/.*)?$")
-PATTERN_ID_FIRST = re.compile(r"^(\d+)(?:/.*)?$")
+    rf"^([a-zA-Z0-9_-]{{{SECURE_HASH_LENGTH}}})(\d+).*$")
+PATTERN_ID_FIRST = re.compile(r"^(\d+).*$")
 VALID_HASH_REGEX = re.compile(r'^[a-zA-Z0-9_-]+$')
 
 streamers = {}
@@ -64,7 +64,7 @@ def parse_media_request(path: str, query: dict) -> tuple[int, str]:
         except ValueError as e:
             raise InvalidHash(f"Invalid message ID format in path: {e}") from e
 
-    raise InvalidHash("Invalid URL structure or missing hash")
+    raise InvalidHash("Invalid URL format: Could not extract message ID or hash")
 
 
 def select_optimal_client() -> tuple[int, ByteStreamer]:
@@ -179,8 +179,9 @@ async def media_delivery(request: web.Request):
         work_loads[client_id] += 1
 
         try:
-            # Use primary streamer for fast metadata to avoid H12 timeout
-            file_info = await primary_streamer.get_file_info(message_id)
+            # Use primary streamer for fast metadata with safety timeout
+            file_info = await asyncio.wait_for(
+                primary_streamer.get_file_info(message_id), timeout=15)
             if not file_info.get('unique_id'):
                 raise FileNotFound("File unique ID not found in info.")
 
