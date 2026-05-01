@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505; --bg2: #0a0a0a; --surface: rgba(22, 22, 22, 0.6);
+            --bg: #050505; --surface: rgba(22, 22, 22, 0.6);
             --border: rgba(255, 255, 255, 0.06); --border2: rgba(255, 255, 255, 0.12);
             --text: #ffffff; --text2: #a1a1aa; --text3: #52525b;
             --accent: #e50914; --accent-hover: #ff1a25; --accent-glow: rgba(229, 9, 20, 0.25);
@@ -20,21 +20,19 @@
             --ease: cubic-bezier(0.4, 0, 0.2, 1); --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; scroll-behavior: smooth; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; position: relative; }
-        body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(229, 9, 20, 0.12) 0%, transparent 60%); pointer-events: none; z-index: 0; }
-        body::after { content: ''; position: fixed; inset: 0; opacity: 0.03; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; }
+        html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+        body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(229, 9, 20, 0.12) 0%, transparent 60%); pointer-events: none; }
         ::selection { background: var(--accent); color: #fff; }
-        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-        .loader { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s var(--ease), visibility 0.5s; }
+        .loader { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s, visibility 0.5s; }
         .loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .spinner { width: 28px; height: 28px; border: 2px solid rgba(229,9,20,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .navbar { position: sticky; top: 0; z-index: 50; height: 56px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; background: rgba(5,5,5,0.75); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+        .navbar { position: sticky; top: 0; z-index: 50; height: 56px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; background: rgba(5,5,5,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
         .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .brand-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; box-shadow: 0 0 16px var(--accent-glow); }
+        .brand-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; }
         .brand-text { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: -0.02em; }
         .brand-text span { color: var(--accent); }
 
@@ -44,30 +42,99 @@
         .file-thumb { width: 56px; height: 76px; border-radius: var(--r2); background: linear-gradient(135deg, #111, #1a1a1a); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); flex-shrink: 0; }
         .file-thumb i { font-size: 22px; color: var(--accent); opacity: 0.85; }
         .file-info { flex: 1; min-width: 0; }
-        .file-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(20px, 2.5vw, 26px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(20px, 2.5vw, 26px); font-weight: 700; line-height: 1.2; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .file-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
         .tag { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
         .tag-accent { background: var(--accent); color: #fff; }
-        .tag-glass { background: rgba(255,255,255,0.06); color: var(--text2); border: 1px solid var(--border); backdrop-filter: blur(8px); }
+        .tag-glass { background: rgba(255,255,255,0.06); color: var(--text2); border: 1px solid var(--border); }
         .file-meta { display: flex; gap: 12px; flex-wrap: wrap; }
         .meta { font-size: 13px; color: var(--text3); display: flex; align-items: center; gap: 5px; }
         .meta i { font-size: 11px; }
 
-        .player-shell { position: relative; border-radius: var(--r3); overflow: hidden; background: #080808; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02); }
-        .player-shell::before { content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; background: linear-gradient(135deg, rgba(229,9,20,0.2), transparent 50%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; z-index: 5; }
+        /* PLAYER */
+        .player-shell { position: relative; border-radius: var(--r3); overflow: hidden; background: #080808; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
+        .player-shell::before { content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; background: linear-gradient(135deg, rgba(229,9,20,0.2), transparent 50%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; z-index: 10; }
+        
         .player-aspect { position: relative; padding-top: 56.25%; }
-        .player-aspect video, .player-aspect .plyr { position: absolute; inset: 0; width: 100%; height: 100%; }
-        .player-aspect .plyr { --plyr-color-main: var(--accent); --plyr-menu-background: rgba(14,14,14,0.95); --plyr-menu-color: #fff; --plyr-control-icon-size: 16px; --plyr-font-size-small: 13px; }
+        .player-aspect video { position: absolute; inset: 0; width: 100%; height: 100%; }
+        
+        /* Custom Plyr styling */
+        .player-aspect .plyr { position: absolute; inset: 0; }
         .player-aspect .plyr__video-wrapper { background: #000; }
-        .plyr__control--overlaid { background: var(--accent) !important; border-radius: 50% !important; padding: 24px !important; opacity: 0.9; transition: all 0.3s var(--ease); }
+        .plyr__control--overlaid { background: var(--accent) !important; border-radius: 50% !important; padding: 24px !important; opacity: 0.9; transition: transform 0.3s; }
         .plyr__control--overlaid:hover { opacity: 1 !important; transform: scale(1.08) !important; }
+        
+        /* Gesture Overlay */
+        .gesture-overlay { position: absolute; inset: 0; z-index: 5; display: flex; cursor: pointer; }
+        .gesture-left { flex: 1; position: relative; }
+        .gesture-center { flex: 1; position: relative; }
+        .gesture-right { flex: 1; position: relative; }
+        
+        /* Gesture Feedback Indicators */
+        .gesture-indicator {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            border-radius: var(--r); padding: 16px; display: none;
+            align-items: center; gap: 12px; z-index: 10;
+            transition: opacity 0.2s;
+        }
+        .gesture-indicator.show { display: flex; }
+        .gi-brightness { left: 20px; }
+        .gi-volume { right: 20px; }
+        .gi-icon { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        .gi-info { min-width: 60px; }
+        .gi-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+        .gi-bar-bg { width: 80px; height: 6px; background: rgba(255,255,255,0.15); border-radius: 10px; overflow: hidden; }
+        .gi-bar-fill { height: 100%; background: var(--accent); border-radius: 10px; transition: width 0.1s; }
+        .gi-value { font-size: 14px; font-weight: 600; margin-top: 4px; }
+
+        /* Seek Feedback */
+        .seek-feedback {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+            border-radius: 50%; width: 72px; height: 72px;
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 4px; z-index: 10;
+            animation: seekPop 0.8s ease forwards;
+        }
+        .seek-feedback.show { display: flex; }
+        .seek-feedback i { font-size: 24px; }
+        .seek-feedback span { font-size: 11px; font-weight: 600; }
+        @keyframes seekPop { 0% { opacity: 0; transform: translate(-50%,-50%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%,-50%) scale(1.1); } 80% { opacity: 1; transform: translate(-50%,-50%) scale(1); } 100% { opacity: 0; transform: translate(-50%,-50%) scale(0.8); } }
+
+        /* Speed Indicator */
+        .speed-indicator {
+            position: absolute; top: 16px; right: 16px;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            border-radius: var(--r); padding: 8px 14px;
+            display: none; align-items: center; gap: 8px; z-index: 10;
+            font-size: 13px; font-weight: 600;
+        }
+        .speed-indicator.show { display: flex; }
+        .speed-indicator i { color: var(--accent); }
+
+        /* Buffer Overlay with Speed */
+        .buffer-overlay {
+            position: absolute; inset: 0; z-index: 8;
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 16px;
+        }
+        .buffer-overlay.show { display: flex; }
+        .buffer-spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .buffer-text { font-size: 14px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+        .buffer-text i { color: var(--accent); }
+        .buffer-speed { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 6px; }
+        .buffer-speed .speed-val { color: #4ade80; font-weight: 600; font-family: 'Inter', monospace; }
+
+        /* Plyr Customizations */
+        .player-aspect .plyr { --plyr-color-main: var(--accent); --plyr-menu-background: rgba(14,14,14,0.95); --plyr-menu-color: #fff; --plyr-control-icon-size: 17px; }
 
         .toolbar { display: flex; gap: 6px; padding: 12px; flex-wrap: wrap; }
-        .tb { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: var(--r); border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: var(--text2); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s var(--ease); white-space: nowrap; }
+        .tb { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: var(--r); border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: var(--text2); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .tb:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: var(--border2); }
         .tb:active { transform: scale(0.97); }
-        .tb i { font-size: 12px; color: var(--accent); transition: transform 0.2s; }
-        .tb:hover i { transform: scale(1.1); }
+        .tb i { font-size: 12px; color: var(--accent); }
         .tb-fill { background: var(--accent); border-color: var(--accent); color: #fff; }
         .tb-fill:hover { background: var(--accent-hover); box-shadow: 0 4px 16px var(--accent-glow); }
         .tb-fill i { color: #fff; }
@@ -79,40 +146,36 @@
 
         .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
         .pcard { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--r2); border: 1px solid var(--border); background: var(--surface); cursor: pointer; transition: all 0.25s var(--ease-out); text-decoration: none; color: inherit; backdrop-filter: blur(12px); }
-        .pcard:hover { border-color: rgba(229,9,20,0.3); background: rgba(229,9,20,0.06); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
-        .pcard:active { transform: translateY(0) scale(0.98); }
-        .pcard-icon { width: 40px; height: 40px; border-radius: var(--r2); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.04); flex-shrink: 0; transition: all 0.25s; }
+        .pcard:hover { border-color: rgba(229,9,20,0.3); background: rgba(229,9,20,0.06); transform: translateY(-2px); }
+        .pcard:active { transform: scale(0.98); }
+        .pcard-icon { width: 40px; height: 40px; border-radius: var(--r2); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.04); flex-shrink: 0; }
         .pcard:hover .pcard-icon { background: rgba(229,9,20,0.12); }
         .pcard-icon img { width: 22px; height: 22px; object-fit: contain; }
         .pcard-icon i { font-size: 16px; }
         .pcard-info { flex: 1; min-width: 0; }
-        .pcard-name { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pcard-name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .pcard-plat { font-size: 11px; color: var(--text3); margin-top: 2px; }
         .pcard-arrow { color: var(--text3); font-size: 11px; opacity: 0; transform: translateX(-4px); transition: all 0.25s; }
         .pcard:hover .pcard-arrow { opacity: 1; transform: translateX(0); color: var(--accent); }
 
         .footer { text-align: center; padding: 32px 0 16px; font-size: 12px; color: var(--text3); border-top: 1px solid var(--border); margin-top: 48px; }
-        .footer a { color: var(--accent); text-decoration: none; font-weight: 500; transition: color 0.2s; }
-        .footer a:hover { color: var(--accent-hover); text-decoration: underline; }
+        .footer a { color: var(--accent); text-decoration: none; font-weight: 500; }
+        .footer a:hover { text-decoration: underline; }
 
         .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: var(--r2); background: rgba(16,16,16,0.95); border: 1px solid var(--border2); z-index: 200; opacity: 0; pointer-events: none; transition: all 0.4s var(--ease-out); backdrop-filter: blur(16px); }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-        .toast-ic { width: 28px; height: 28px; border-radius: 50%; background: rgba(229,9,20,0.15); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
-        .toast-msg { font-size: 13px; font-weight: 500; color: #fff; }
+        .toast-ic { width: 28px; height: 28px; border-radius: 50%; background: rgba(229,9,20,0.15); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .toast-msg { font-size: 13px; font-weight: 500; }
 
         @media (max-width: 640px) {
-            .navbar { padding: 0 16px; }
-            .container { padding: 16px 12px 40px; }
-            .file-header { gap: 12px; }
-            .file-thumb { width: 48px; height: 64px; }
-            .file-name { font-size: 20px; }
+            .navbar { padding: 0 16px; } .container { padding: 16px 12px 40px; }
+            .file-header { gap: 12px; } .file-thumb { width: 48px; height: 64px; }
             .pgrid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
             .pcard { padding: 12px 14px; gap: 10px; }
-            .pcard-icon { width: 36px; height: 36px; border-radius: 10px; }
-            .pcard-icon img { width: 18px; height: 18px; }
-            .toolbar { padding: 10px; }
-            .tb { padding: 7px 12px; font-size: 12px; }
+            .pcard-icon { width: 36px; height: 36px; } .pcard-icon img { width: 18px; height: 18px; }
+            .toolbar { padding: 10px; } .tb { padding: 7px 12px; font-size: 12px; }
             .tb-spacer { display: none; }
+            .gesture-indicator { padding: 12px; } .gi-bar-bg { width: 60px; }
         }
     </style>
 </head>
@@ -120,10 +183,7 @@
     <div class="loader" id="loader"><div class="spinner"></div></div>
 
     <nav class="navbar">
-        <a href="#" class="brand">
-            <div class="brand-icon">S</div>
-            <div class="brand-text">Syntax<span>Realm</span></div>
-        </a>
+        <a href="#" class="brand"><div class="brand-icon">S</div><div class="brand-text">Syntax<span>Realm</span></div></a>
     </nav>
 
     <main class="container">
@@ -144,11 +204,53 @@
             </div>
         </div>
 
-        <div class="player-shell">
+        <div class="player-shell" id="playerShell">
             <div class="player-aspect">
-                <video id="player" playsinline controls preload="metadata">
+                <video id="player" playsinline preload="metadata" crossorigin>
                     <source src="{{ src }}" type="{{ mime_type }}">
                 </video>
+                
+                <!-- Gesture Overlay -->
+                <div class="gesture-overlay" id="gestureOverlay">
+                    <div class="gesture-left" id="gestureLeft"></div>
+                    <div class="gesture-center" id="gestureCenter"></div>
+                    <div class="gesture-right" id="gestureRight"></div>
+                </div>
+
+                <!-- Indicators -->
+                <div class="gesture-indicator gi-brightness" id="brightnessInd">
+                    <div class="gi-icon"><i class="fas fa-sun"></i></div>
+                    <div class="gi-info">
+                        <div class="gi-label">Brightness</div>
+                        <div class="gi-bar-bg"><div class="gi-bar-fill" id="brightnessBar" style="width:100%"></div></div>
+                        <div class="gi-value" id="brightnessVal">100%</div>
+                    </div>
+                </div>
+
+                <div class="gesture-indicator gi-volume" id="volumeInd">
+                    <div class="gi-icon"><i class="fas fa-volume-high"></i></div>
+                    <div class="gi-info">
+                        <div class="gi-label">Volume</div>
+                        <div class="gi-bar-bg"><div class="gi-bar-fill" id="volumeBar" style="width:100%"></div></div>
+                        <div class="gi-value" id="volumeVal">100%</div>
+                    </div>
+                </div>
+
+                <div class="seek-feedback" id="seekFeedback">
+                    <i class="fas fa-forward" id="seekIcon"></i>
+                    <span id="seekText">+10s</span>
+                </div>
+
+                <div class="speed-indicator" id="speedInd">
+                    <i class="fas fa-gauge-high"></i>
+                    <span id="speedText">1.0x</span>
+                </div>
+
+                <div class="buffer-overlay" id="bufferOverlay">
+                    <div class="buffer-spinner"></div>
+                    <div class="buffer-text"><i class="fas fa-circle-notch fa-spin"></i> Buffering...</div>
+                    <div class="buffer-speed"><i class="fas fa-wifi"></i> Speed: <span class="speed-val" id="netSpeed">-- Mbps</span></div>
+                </div>
             </div>
         </div>
 
@@ -160,7 +262,7 @@
             <button class="tb" id="pipBtn" title="Picture-in-Picture"><i class="fas fa-clone"></i></button>
         </div>
 
-        <div class="section-label"><i class="fas fa-tv"></i> Open in External Player</div>
+        <div class="section-label"><i class="fas fa-tv"></i> Play in External App</div>
         <div class="pgrid">
             <a class="pcard" data-p="vlc"><div class="pcard-icon"><img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/vlc.png" alt="VLC" loading="lazy"></div><div class="pcard-info"><div class="pcard-name">VLC Player</div><div class="pcard-plat">Android · iOS</div></div><div class="pcard-arrow"><i class="fas fa-arrow-right"></i></div></a>
             <a class="pcard" data-p="mxpro"><div class="pcard-icon"><img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/mx.png" alt="MX" loading="lazy"></div><div class="pcard-info"><div class="pcard-name">MX Player Pro</div><div class="pcard-plat">Android</div></div><div class="pcard-arrow"><i class="fas fa-arrow-right"></i></div></a>
@@ -185,32 +287,251 @@
         setTimeout(() => document.getElementById('loader').classList.add('hidden'), 600);
 
         const video = document.getElementById('player');
-        const src = video.querySelector('source') ? video.querySelector('source').src : video.src;
-        const enc = encodeURIComponent(src);
+        const src = video.querySelector('source').src;
+        const encSrc = encodeURIComponent(src);
 
+        // ===== PLYR SETUP =====
+        let plyr;
         if (typeof Plyr !== 'undefined') {
-            new Plyr(video, {
-                controls: ['play-large', 'play', 'progress', 'current-time', 'duration', 'mute', 'volume', 'settings', 'pip', 'fullscreen'],
-                settings: ['quality', 'speed'],
-                speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
+            plyr = new Plyr(video, {
+                controls: ['play-large', 'play', 'progress', 'current-time', 'duration', 'mute', 'volume', 'settings', 'pip', 'airplay', 'fullscreen'],
+                settings: ['captions', 'quality', 'speed'],
+                captions: { active: true, update: true, language: 'en' },
+                speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
+                tooltips: { controls: true, seek: true }
             });
         }
 
+        // ===== 1. BUFFERING WITH NETWORK SPEED =====
+        const bufferOverlay = document.getElementById('bufferOverlay');
+        const netSpeedEl = document.getElementById('netSpeed');
+        let speedInterval;
+
+        function getNetworkSpeed() {
+            // Use Network Information API if available
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (conn) {
+                const downlink = conn.downlink; // Mbps
+                return downlink ? downlink.toFixed(1) : null;
+            }
+            // Fallback: estimate from buffered data
+            if (video.buffered.length > 0) {
+                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                const currentTime = video.currentTime;
+                const bufferedDuration = bufferedEnd - currentTime;
+                if (bufferedDuration > 0 && video.readyState >= 3) {
+                    // Rough estimate
+                    return 'Est.';
+                }
+            }
+            return null;
+        }
+
+        function updateSpeedDisplay() {
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (conn && conn.downlink) {
+                const speed = conn.downlink;
+                const unit = speed >= 1 ? 'Mbps' : 'kbps';
+                const val = speed >= 1 ? speed.toFixed(1) : (speed * 1024).toFixed(0);
+                netSpeedEl.textContent = val + ' ' + unit;
+            } else {
+                netSpeedEl.textContent = 'Checking...';
+            }
+        }
+
+        video.addEventListener('waiting', () => {
+            bufferOverlay.classList.add('show');
+            updateSpeedDisplay();
+            speedInterval = setInterval(updateSpeedDisplay, 1000);
+        });
+
+        video.addEventListener('playing', () => {
+            bufferOverlay.classList.remove('show');
+            clearInterval(speedInterval);
+        });
+
+        video.addEventListener('canplay', () => {
+            bufferOverlay.classList.remove('show');
+            clearInterval(speedInterval);
+        });
+
+        // ===== 2. GESTURE CONTROLS (MX Player Style) =====
+        const gestureOverlay = document.getElementById('gestureOverlay');
+        const gestureLeft = document.getElementById('gestureLeft');
+        const gestureCenter = document.getElementById('gestureCenter');
+        const gestureRight = document.getElementById('gestureRight');
+        
+        const brightnessInd = document.getElementById('brightnessInd');
+        const brightnessBar = document.getElementById('brightnessBar');
+        const brightnessVal = document.getElementById('brightnessVal');
+        
+        const volumeInd = document.getElementById('volumeInd');
+        const volumeBar = document.getElementById('volumeBar');
+        const volumeVal = document.getElementById('volumeVal');
+        const volumeIcon = volumeInd.querySelector('i');
+        
+        const seekFeedback = document.getElementById('seekFeedback');
+        const seekIcon = document.getElementById('seekIcon');
+        const seekText = document.getElementById('seekText');
+        
+        const speedInd = document.getElementById('speedInd');
+        const speedTextEl = document.getElementById('speedText');
+
+        let currentBrightness = 100;
+        let currentVolume = 100;
+        let brightnessTimeout, volumeTimeout, speedTimeout;
+
+        // Brightness Control (Left Side)
+        let brightnessStartY = 0;
+        let brightnessStartVal = 100;
+
+        gestureLeft.addEventListener('touchstart', (e) => {
+            brightnessStartY = e.touches[0].clientY;
+            brightnessStartVal = currentBrightness;
+        }, { passive: true });
+
+        gestureLeft.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const deltaY = brightnessStartY - e.touches[0].clientY;
+            const sensitivity = 0.5;
+            let newBrightness = Math.min(100, Math.max(0, brightnessStartVal + deltaY * sensitivity));
+            currentBrightness = newBrightness;
+
+            // Apply brightness filter to video
+            video.style.filter = `brightness(${currentBrightness / 100})`;
+
+            brightnessInd.classList.add('show');
+            brightnessBar.style.width = currentBrightness + '%';
+            brightnessVal.textContent = Math.round(currentBrightness) + '%';
+
+            clearTimeout(brightnessTimeout);
+            brightnessTimeout = setTimeout(() => brightnessInd.classList.remove('show'), 1500);
+        }, { passive: false });
+
+        // Volume Control (Right Side)
+        let volumeStartY = 0;
+        let volumeStartVal = 100;
+
+        gestureRight.addEventListener('touchstart', (e) => {
+            volumeStartY = e.touches[0].clientY;
+            volumeStartVal = currentVolume;
+        }, { passive: true });
+
+        gestureRight.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const deltaY = volumeStartY - e.touches[0].clientY;
+            const sensitivity = 0.5;
+            let newVolume = Math.min(100, Math.max(0, volumeStartVal + deltaY * sensitivity));
+            currentVolume = newVolume;
+
+            video.volume = currentVolume / 100;
+
+            volumeInd.classList.add('show');
+            volumeBar.style.width = currentVolume + '%';
+            volumeVal.textContent = Math.round(currentVolume) + '%';
+
+            // Update volume icon
+            if (currentVolume === 0) volumeIcon.className = 'fas fa-volume-xmark';
+            else if (currentVolume < 50) volumeIcon.className = 'fas fa-volume-low';
+            else volumeIcon.className = 'fas fa-volume-high';
+
+            clearTimeout(volumeTimeout);
+            volumeTimeout = setTimeout(() => volumeInd.classList.remove('show'), 1500);
+        }, { passive: false });
+
+        // Double Tap Seek (Left/Right zones)
+        let lastTapLeft = 0;
+        let lastTapRight = 0;
+        const doubleTapDelay = 300;
+
+        gestureLeft.addEventListener('click', (e) => {
+            const now = Date.now();
+            if (now - lastTapLeft < doubleTapDelay) {
+                // Double tap - Seek Backward
+                video.currentTime = Math.max(0, video.currentTime - 10);
+                showSeekFeedback('backward', '-10s');
+            }
+            lastTapLeft = now;
+        });
+
+        gestureRight.addEventListener('click', (e) => {
+            const now = Date.now();
+            if (now - lastTapRight < doubleTapDelay) {
+                // Double tap - Seek Forward
+                video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                showSeekFeedback('forward', '+10s');
+            }
+            lastTapRight = now;
+        });
+
+        function showSeekFeedback(direction, text) {
+            seekFeedback.classList.add('show');
+            seekFeedback.style.animation = 'none';
+            seekFeedback.offsetHeight; // trigger reflow
+            seekFeedback.style.animation = '';
+            seekFeedback.classList.add('show');
+            
+            if (direction === 'forward') {
+                seekIcon.className = 'fas fa-forward';
+            } else {
+                seekIcon.className = 'fas fa-backward';
+            }
+            seekText.textContent = text;
+
+            setTimeout(() => seekFeedback.classList.remove('show'), 800);
+        }
+
+        // Center Tap - Play/Pause + Speed Cycle
+        let tapCount = 0;
+        let tapTimer;
+        const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+        let currentSpeedIndex = 2;
+
+        gestureCenter.addEventListener('click', (e) => {
+            tapCount++;
+            if (tapCount === 1) {
+                tapTimer = setTimeout(() => {
+                    // Single tap - Play/Pause
+                    if (video.paused) video.play();
+                    else video.pause();
+                    tapCount = 0;
+                }, 250);
+            } else if (tapCount === 2) {
+                clearTimeout(tapTimer);
+                tapCount = 0;
+                // Double tap center - Toggle Speed
+                currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
+                video.playbackRate = speeds[currentSpeedIndex];
+                speedInd.classList.add('show');
+                speedTextEl.textContent = speeds[currentSpeedIndex] + 'x';
+                clearTimeout(speedTimeout);
+                speedTimeout = setTimeout(() => speedInd.classList.remove('show'), 2000);
+            }
+        });
+
+        // ===== DEEP LINKS =====
         const deepLinks = {
-            vlc: `vlc://${src}`, mxpro: `intent:${src}#Intent;package=com.mxtech.videoplayer.pro;scheme=https;end`,
-            mx: `intent:${src}#Intent;package=com.mxtech.videoplayer.ad;scheme=https;end`,
-            nplayer: `nplayer-${src}`, infuse: `infuse://x-callback-url/play?url=${enc}`,
-            pot: `potplayer://${src}`, vlcpc: `vlc://${src}`, iina: `iina://weblink?url=${enc}`
+            vlc: `intent://${src}#Intent;package=org.videolan.vlc;type=video/*;end`,
+            mxpro: `intent://${src}#Intent;package=com.mxtech.videoplayer.pro;type=video/*;end`,
+            mx: `intent://${src}#Intent;package=com.mxtech.videoplayer.ad;type=video/*;end`,
+            nplayer: `nplayer://${src}`,
+            infuse: `infuse://x-callback-url/play?url=${encSrc}`,
+            pot: `potplayer://${src}`,
+            vlcpc: `vlc://${src}`,
+            iina: `iina://weblink?url=${encSrc}`
         };
         const pNames = { vlc: 'VLC', mxpro: 'MX Pro', mx: 'MX Player', nplayer: 'nPlayer', infuse: 'Infuse', pot: 'PotPlayer', vlcpc: 'VLC Desktop', iina: 'IINA' };
 
-        document.querySelectorAll('.pcard').forEach(c => c.addEventListener('click', e => {
-            e.preventDefault();
-            const link = deepLinks[c.dataset.p];
-            if (link) window.open(link, '_blank');
-            toast('Opening ' + pNames[c.dataset.p] + '...');
-        }));
+        document.querySelectorAll('.pcard').forEach(c => {
+            c.addEventListener('click', e => {
+                e.preventDefault();
+                const link = deepLinks[c.dataset.p];
+                if (link) window.location.href = link;
+                toast('Opening ' + pNames[c.dataset.p] + '...');
+            });
+        });
 
+        // ===== ACTION BUTTONS =====
         document.getElementById('dlBtn').addEventListener('click', () => {
             const a = document.createElement('a'); a.href = src; a.download = ''; a.target = '_blank'; a.rel = 'noopener';
             document.body.appendChild(a); a.click(); document.body.removeChild(a); toast('Download started');
@@ -222,7 +543,7 @@
             toast('Link copied');
         });
         document.getElementById('shareBtn').addEventListener('click', async () => {
-            if (navigator.share) try { await navigator.share({ title: 'Stream', url: src }); } catch {}
+            if (navigator.share) try { await navigator.share({ title: 'Stream from SyntaxRealm', url: src }); } catch {}
             else { await navigator.clipboard.writeText(src); toast('Link copied'); }
         });
         document.getElementById('pipBtn').addEventListener('click', async () => {
@@ -230,6 +551,7 @@
             catch { toast('PiP unavailable'); }
         });
 
+        // ===== TOAST =====
         let tt;
         function toast(m) {
             const t = document.getElementById('toast'); document.getElementById('toastMsg').textContent = m;
