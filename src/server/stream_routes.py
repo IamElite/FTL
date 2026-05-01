@@ -206,11 +206,14 @@ async def media_delivery(request: web.Request):
             filename = (
                 file_info.get('file_name') or f"file_{secrets.token_hex(4)}")
 
+            is_download = request.query.get("download") == "1"
+            disposition = "attachment" if is_download else "inline"
+
             headers = {
                 "Content-Type": mime_type,
                 "Content-Length": str(content_length),
                 "Content-Disposition": (
-                    f"inline; filename*=UTF-8''{quote(filename)}"),
+                    f"{disposition}; filename*=UTF-8''{quote(filename)}"),
                 "Accept-Ranges": "bytes",
                 "Cache-Control": "public, max-age=31536000",
                 "Connection": "keep-alive"

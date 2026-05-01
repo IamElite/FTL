@@ -21,7 +21,7 @@ from src.vars import Var
 
 def get_base_url(request=None):
     if request:
-        scheme = request.headers.get("X-Forwarded-Proto", request.scheme)
+        scheme = request.headers.get("X-Forwarded-Proto", "https" if "herokuapp.com" in request.host else request.scheme)
         host = request.headers.get("X-Forwarded-Host", request.host)
         base_url = f"{scheme}://{host}".rstrip("/")
         
@@ -76,7 +76,7 @@ async def gen_links(fwd_msg: Message, request: Any = None, shortener: bool = Tru
     # slink = f"{base_url}/watch/{f_hash}{fid}/{enc_fname}"
     # olink = f"{base_url}/{f_hash}{fid}/{enc_fname}"
     slink = f"{base_url}/watch/SyntaxRealm-{f_hash}{fid}/{enc_fname}"
-    olink = f"{base_url}/SyntaxRealm-{f_hash}{fid}/{enc_fname}"
+    olink = f"{base_url}/SyntaxRealm-{f_hash}{fid}/{enc_fname}?download=1"
 
 
 
