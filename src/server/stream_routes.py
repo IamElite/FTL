@@ -7,6 +7,7 @@ import asyncio
 from urllib.parse import quote, unquote
 
 from aiohttp import web
+from pyrogram.errors import AuthKeyUnregistered
 
 from src import __version__, StartTime
 from src.bot import StreamBot, multi_clients, work_loads
@@ -30,6 +31,7 @@ PATTERN_ID_FIRST = re.compile(r"^(\d+).*$")
 VALID_HASH_REGEX = re.compile(r'^[a-zA-Z0-9_-]+$')
 
 streamers = {}
+dead_clients = set()
 
 
 def get_streamer(client_id: int) -> ByteStreamer:
@@ -72,14 +74,24 @@ def select_optimal_client() -> tuple[int, ByteStreamer]:
     if not work_loads:
         return 0, get_streamer(0)
 
+    # Filter out dead clients
+    active_work_loads = {
+        cid: load for cid, load in work_loads.items()
+        if cid not in dead_clients
+    }
+
+    if not active_work_loads:
+        # Fallback to primary if all else fails
+        return 0, get_streamer(0)
+
     available_clients = [
-        (cid, load) for cid, load in work_loads.items()
+        (cid, load) for cid, load in active_work_loads.items()
         if load < MAX_CONCURRENT_PER_CLIENT]
 
     if available_clients:
         client_id = min(available_clients, key=lambda x: x[1])[0]
     else:
-        client_id = min(work_loads, key=work_loads.get)
+        client_id = min(active_work_loads, key=active_work_loads.get)
 
     return client_id, get_streamer(client_id)
 
@@ -279,6 +291,15 @@ async def media_delivery(request: web.Request):
                 work_loads[client_id] -= 1
             
             return resp
+
+        except AuthKeyUnregistered:
+            logger.error(f"Client ID {client_id} is unregistered. Removing from pool.")
+            dead_clients.add(client_id)
+            if client_id in work_loads:
+                work_loads[client_id] -= 1
+            # We don't retry here to avoid complex state, 
+            # but next request will use a different client.
+            raise web.HTTPServiceUnavailable(text="Stream client authentication failed. Please try again.")
 
         except (FileNotFound, InvalidHash):
             work_loads[client_id] -= 1
