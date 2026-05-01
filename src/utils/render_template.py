@@ -35,7 +35,7 @@ async def render_page(id: int, secure_hash: str, request, requested_action: str 
         
         quoted_filename = urllib.parse.quote(file_name.replace('/', '_'))
         base_url = get_base_url(request)
-        src = urllib.parse.urljoin(base_url + "/", f'SyntaxRealm-{secure_hash}{id}')
+        src = urllib.parse.urljoin(base_url + "/", f'SyntaxRealm-{secure_hash}{id}/{quoted_filename}')
         
         safe_filename = html_module.escape(file_name)
         if requested_action == 'stream':

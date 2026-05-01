@@ -75,8 +75,8 @@ async def gen_links(fwd_msg: Message, request: Any = None, shortener: bool = Tru
     f_hash = get_hash(fwd_msg)
     # slink = f"{base_url}/watch/{f_hash}{fid}/{enc_fname}"
     # olink = f"{base_url}/{f_hash}{fid}/{enc_fname}"
-    slink = f"{base_url}/watch/SyntaxRealm-{f_hash}{fid}"
-    olink = f"{base_url}/SyntaxRealm-{f_hash}{fid}"
+    slink = f"{base_url}/watch/SyntaxRealm-{f_hash}{fid}/{enc_fname}"
+    olink = f"{base_url}/SyntaxRealm-{f_hash}{fid}/{enc_fname}"
 
 
 
