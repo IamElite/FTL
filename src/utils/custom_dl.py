@@ -50,8 +50,8 @@ class ByteStreamer:
             message = await self.get_message(message_id)
         
         
-        # Telegram part size for large files is 512KB
-        PART_SIZE = 512 * 1024
+        # Pyrogram uses 1MB chunks internally for stream_media
+        PART_SIZE = 1024 * 1024
         chunk_offset = offset // PART_SIZE
         chunk_limit = (limit + PART_SIZE - 1) // PART_SIZE if limit > 0 else 0
 
