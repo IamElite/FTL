@@ -21,7 +21,10 @@ from src.vars import Var
 
 def get_base_url(request=None):
     if request:
-        base_url = str(request.base_url).rstrip("/")
+        scheme = request.headers.get("X-Forwarded-Proto", request.scheme)
+        host = request.headers.get("X-Forwarded-Host", request.host)
+        base_url = f"{scheme}://{host}".rstrip("/")
+        
         if not Var.BASE_URL or Var.BASE_URL != base_url:
             Var.BASE_URL = base_url
         return base_url
