@@ -240,37 +240,44 @@ async def media_delivery(request: web.Request):
 
             logger.info(f"Starting stream for {path} (Range: {range_header or 'None'})")
 
-            async def stream_generator():
-                try:
-                    bytes_sent = 0
-                    bytes_to_skip = start % CHUNK_SIZE
-
-                    async for chunk in streamer.stream_file(
-                            message_id, offset=start, limit=content_length, message=message):
-                        if bytes_to_skip > 0:
-                            if len(chunk) <= bytes_to_skip:
-                                bytes_to_skip -= len(chunk)
-                                continue
-                            chunk = chunk[bytes_to_skip:]
-                            bytes_to_skip = 0
-
-                        remaining = content_length - bytes_sent
-                        if len(chunk) > remaining:
-                            chunk = chunk[:remaining]
-
-                        if chunk:
-                            yield chunk
-                            bytes_sent += len(chunk)
-
-                        if bytes_sent >= content_length:
-                            break
-                finally:
-                    work_loads[client_id] -= 1
-            return web.Response(
+            resp = web.StreamResponse(
                 status=206 if range_header else 200,
-                body=stream_generator(),
                 headers=headers
             )
+            await resp.prepare(request)
+
+            try:
+                bytes_sent = 0
+                bytes_to_skip = start % CHUNK_SIZE
+                async for chunk in streamer.stream_file(
+                        message_id, offset=start, limit=content_length, message=message):
+                    if bytes_to_skip > 0:
+                        if len(chunk) <= bytes_to_skip:
+                            bytes_to_skip -= len(chunk)
+                            continue
+                        chunk = chunk[bytes_to_skip:]
+                        bytes_to_skip = 0
+
+                    remaining = content_length - bytes_sent
+                    if len(chunk) > remaining:
+                        chunk = chunk[:remaining]
+                    
+                    if chunk:
+                        await resp.write(chunk)
+                        bytes_sent += len(chunk)
+                    
+                    if bytes_sent >= content_length:
+                        break
+                
+                await resp.write_eof()
+            except (ConnectionResetError, asyncio.CancelledError):
+                logger.debug(f"Stream interrupted for {path}")
+            except Exception as e:
+                logger.error(f"Stream error during write for {path}: {e}")
+            finally:
+                work_loads[client_id] -= 1
+            
+            return resp
 
         except (FileNotFound, InvalidHash):
             work_loads[client_id] -= 1
