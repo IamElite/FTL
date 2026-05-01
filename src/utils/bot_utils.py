@@ -17,16 +17,15 @@ from src.utils.logger import logger
 from src.utils.messages import (MSG_BUTTON_GET_HELP, MSG_DC_UNKNOWN,
                                     MSG_DC_USER_INFO, MSG_NEW_USER)
 from src.utils.shortener import shorten
-import os
 from src.vars import Var
 
-DISCOVERED_URL = os.getenv("URL", "").rstrip("/")
+_DISCOVERED_URL = os.getenv("URL", "").rstrip("/")
 
 def get_base_url(request=None):
-    global DISCOVERED_URL
+    global _DISCOVERED_URL
     if request:
-        DISCOVERED_URL = str(request.base_url).rstrip("/")
-    return DISCOVERED_URL
+        _DISCOVERED_URL = str(request.base_url).rstrip("/")
+    return _DISCOVERED_URL
 
 
 
@@ -64,7 +63,7 @@ async def log_newusr(cli: Client, uid: int, fname: str):
         logger.error(f"Database error in log_newusr for user {uid}: {e}")
 
 
-async def gen_links(fwd_msg: Message, shortener: bool = True, request: Any = None) -> Dict[str, str]:
+async def gen_links(fwd_msg: Message, request: Any = None, shortener: bool = True) -> Dict[str, str]:
     base_url = get_base_url(request)
 
     fid = fwd_msg.id

@@ -123,7 +123,9 @@ async def root_redirect(request):
 
 @routes.get("/status", allow_head=True)
 async def status_endpoint(request):
+    get_base_url(request)
     uptime = time.time() - StartTime
+
     total_load = sum(work_loads.values())
 
     workload_distribution = {str(k): v for k, v in sorted(work_loads.items())}
@@ -151,7 +153,6 @@ async def media_preview(request: web.Request):
     try:
         path = request.match_info["path"]
         message_id, secure_hash = parse_media_request(path, request.query)
-        get_base_url(request)
 
         rendered_page = await render_page(
             message_id, secure_hash, request, requested_action='stream')
