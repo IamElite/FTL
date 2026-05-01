@@ -113,19 +113,6 @@
         .speed-indicator.show { display: flex; }
         .speed-indicator i { color: var(--accent); }
 
-        /* Buffer Overlay with Speed */
-        .buffer-overlay {
-            position: absolute; inset: 0; z-index: 8;
-            background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
-            display: none; align-items: center; justify-content: center;
-            flex-direction: column; gap: 16px;
-        }
-        .buffer-overlay.show { display: flex; }
-        .buffer-spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-        .buffer-text { font-size: 14px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
-        .buffer-text i { color: var(--accent); }
-        .buffer-speed { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 6px; }
-        .buffer-speed .speed-val { color: #4ade80; font-weight: 600; font-family: 'Inter', monospace; }
 
         /* Plyr Customizations */
         .player-aspect .plyr { --plyr-color-main: var(--accent); --plyr-menu-background: rgba(14,14,14,0.95); --plyr-menu-color: #fff; --plyr-control-icon-size: 17px; }
@@ -246,11 +233,6 @@
                     <span id="speedText">1.0x</span>
                 </div>
 
-                <div class="buffer-overlay" id="bufferOverlay">
-                    <div class="buffer-spinner"></div>
-                    <div class="buffer-text"><i class="fas fa-circle-notch fa-spin"></i> Buffering...</div>
-                    <div class="buffer-speed"><i class="fas fa-wifi"></i> Speed: <span class="speed-val" id="netSpeed">-- Mbps</span></div>
-                </div>
             </div>
         </div>
 
@@ -301,72 +283,6 @@
                 tooltips: { controls: true, seek: true }
             });
         }
-
-        // ===== 1. BUFFERING WITH NETWORK SPEED =====
-        const bufferOverlay = document.getElementById('bufferOverlay');
-        const netSpeedEl = document.getElementById('netSpeed');
-        let speedInterval;
-
-        function getNetworkSpeed() {
-            // Use Network Information API if available
-            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            if (conn) {
-                const downlink = conn.downlink; // Mbps
-                return downlink ? downlink.toFixed(1) : null;
-            }
-            // Fallback: estimate from buffered data
-            if (video.buffered.length > 0) {
-                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-                const currentTime = video.currentTime;
-                const bufferedDuration = bufferedEnd - currentTime;
-                if (bufferedDuration > 0 && video.readyState >= 3) {
-                    // Rough estimate
-                    return 'Est.';
-                }
-            }
-            return null;
-        }
-
-        let bufferTimeout;
-        function updateSpeedDisplay() {
-            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            let baseSpeed = (conn && conn.downlink) ? conn.downlink : 5.0;
-            // Add some "live" fluctuation (±15%)
-            let speed = baseSpeed * (0.85 + Math.random() * 0.3);
-            
-            const unit = speed >= 1 ? 'Mbps' : 'kbps';
-            const val = speed >= 1 ? speed.toFixed(1) : (speed * 1024).toFixed(0);
-            netSpeedEl.textContent = val + ' ' + unit;
-        }
-
-        video.addEventListener('waiting', () => {
-            clearTimeout(bufferTimeout);
-            bufferTimeout = setTimeout(() => {
-                if (video.paused) return;
-                bufferOverlay.classList.add('show');
-                updateSpeedDisplay();
-                if (!speedInterval) speedInterval = setInterval(updateSpeedDisplay, 2000);
-            }, 600);
-        });
-
-        video.addEventListener('playing', () => {
-            clearTimeout(bufferTimeout);
-            bufferOverlay.classList.remove('show');
-            clearInterval(speedInterval);
-            speedInterval = null;
-        });
-
-        video.addEventListener('canplay', () => {
-            clearTimeout(bufferTimeout);
-            bufferOverlay.classList.remove('show');
-            clearInterval(speedInterval);
-            speedInterval = null;
-        });
-
-        video.addEventListener('seeked', () => {
-            clearTimeout(bufferTimeout);
-            bufferOverlay.classList.remove('show');
-        });
 
         // ===== 2. GESTURE CONTROLS (MX Player Style) =====
         const gestureOverlay = document.getElementById('gestureOverlay');
