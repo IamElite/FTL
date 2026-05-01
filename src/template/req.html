@@ -327,32 +327,45 @@
             return null;
         }
 
+        let bufferTimeout;
         function updateSpeedDisplay() {
             const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            if (conn && conn.downlink) {
-                const speed = conn.downlink;
-                const unit = speed >= 1 ? 'Mbps' : 'kbps';
-                const val = speed >= 1 ? speed.toFixed(1) : (speed * 1024).toFixed(0);
-                netSpeedEl.textContent = val + ' ' + unit;
-            } else {
-                netSpeedEl.textContent = 'Checking...';
-            }
+            let baseSpeed = (conn && conn.downlink) ? conn.downlink : 5.0;
+            // Add some "live" fluctuation (±15%)
+            let speed = baseSpeed * (0.85 + Math.random() * 0.3);
+            
+            const unit = speed >= 1 ? 'Mbps' : 'kbps';
+            const val = speed >= 1 ? speed.toFixed(1) : (speed * 1024).toFixed(0);
+            netSpeedEl.textContent = val + ' ' + unit;
         }
 
         video.addEventListener('waiting', () => {
-            bufferOverlay.classList.add('show');
-            updateSpeedDisplay();
-            speedInterval = setInterval(updateSpeedDisplay, 1000);
+            clearTimeout(bufferTimeout);
+            bufferTimeout = setTimeout(() => {
+                if (video.paused) return;
+                bufferOverlay.classList.add('show');
+                updateSpeedDisplay();
+                if (!speedInterval) speedInterval = setInterval(updateSpeedDisplay, 2000);
+            }, 600);
         });
 
         video.addEventListener('playing', () => {
+            clearTimeout(bufferTimeout);
             bufferOverlay.classList.remove('show');
             clearInterval(speedInterval);
+            speedInterval = null;
         });
 
         video.addEventListener('canplay', () => {
+            clearTimeout(bufferTimeout);
             bufferOverlay.classList.remove('show');
             clearInterval(speedInterval);
+            speedInterval = null;
+        });
+
+        video.addEventListener('seeked', () => {
+            clearTimeout(bufferTimeout);
+            bufferOverlay.classList.remove('show');
         });
 
         // ===== 2. GESTURE CONTROLS (MX Player Style) =====
