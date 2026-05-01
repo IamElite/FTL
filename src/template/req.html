@@ -132,9 +132,9 @@
             <div class="file-info">
                 <h1 class="file-name" id="fileName">{{ file_name }}</h1>
                 <div class="file-tags">
-                    <span class="tag tag-accent">Stream Ready</span>
-                    <span class="tag tag-glass">HD 1080p</span>
-                    <span class="tag tag-glass">MP4</span>
+                    {% for tag in file_tags %}
+                    <span class="tag {{ 'tag-accent' if loop.first else 'tag-glass' }}">{{ tag }}</span>
+                    {% endfor %}
                 </div>
                 <div class="file-meta">
                     <span class="meta"><i class="fas fa-weight-scale"></i> <span id="fSize">{{ file_size }}</span></span>

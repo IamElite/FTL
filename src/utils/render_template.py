@@ -2,6 +2,8 @@
 
 import html as html_module
 import urllib.parse
+import re
+import os
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -21,6 +23,29 @@ template_env = Environment(
     auto_reload=False,
     optimized=True
 )
+
+def get_file_tags(file_name: str, media) -> list[str]:
+    tags = ["Stream Ready"]
+    
+    # Extract extension
+    _, ext = os.path.splitext(file_name)
+    if ext:
+        tags.append(ext[1:].upper())
+    
+    # Extract resolution from filename
+    res_match = re.search(r'(\d{3,4}p)', file_name, re.IGNORECASE)
+    if res_match:
+        tags.append(res_match.group(1).upper())
+    elif hasattr(media, 'height') and media.height:
+        h = media.height
+        if h >= 2160: tags.append("4K 2160P")
+        elif h >= 1440: tags.append("2K 1440P")
+        elif h >= 1080: tags.append("HD 1080P")
+        elif h >= 720: tags.append("HD 720P")
+        elif h >= 480: tags.append("480P")
+        elif h >= 360: tags.append("360P")
+    
+    return tags
 
 async def render_page(id: int, secure_hash: str, request, requested_action: str | None = None) -> str:
     try:
@@ -50,6 +75,7 @@ async def render_page(id: int, secure_hash: str, request, requested_action: str 
                 'src': src,
                 'mime_type': mime_type,
                 'file_size': humanbytes(getattr(media, 'file_size', 0)),
+                'file_tags': get_file_tags(file_name, media),
                 'support_link': Var.SUPPORT_LINK
             }
         else:
