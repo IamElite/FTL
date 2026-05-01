@@ -1,153 +1,242 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ heading }}</title>
-
-    <!-- Social Meta Tags -->
-    <meta name="description" content="Easily share and distribute files">
-    <meta property="og:title" content="SyntaxRealm - FileToLink">
-    <meta property="og:description" content="File Streamer">
-    <meta property="og:type" content="website">
-    <meta property="og:image" content="https://i.ibb.co/3YdmmDj6/SyntaxRealm-favicon.png">
-    
-    <!-- Configuration -->
-    <meta name="theme-color" content="#1a1a2e">
-    <meta name="msapplication-navbutton-color" content="#1a1a2e">
-    <meta name="apple-mobile-web-app-status-bar-style" content="#1a1a2e">
-    <meta name="color-scheme" content="dark light">
-    <meta name="application-name" content="SyntaxRealm - FileToLink">
-    
-    <!-- Icons -->
-    <link rel="icon" href="https://i.ibb.co/3YdmmDj6/SyntaxRealm-favicon.png">
-    <link rel="apple-touch-icon" href="https://i.ibb.co/3YdmmDj6/SyntaxRealm-favicon.png">
-
-    <!-- External Resources -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>SyntaxRealm — Stream</title>
+    <meta name="theme-color" content="#050505">
+    <link rel="icon" href="https://i.ibb.co/3YdmmDj6/kpsbots-favicon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505; --bg2: #0a0a0a; --surface: rgba(22, 22, 22, 0.6);
+            --border: rgba(255, 255, 255, 0.06); --border2: rgba(255, 255, 255, 0.12);
+            --text: #ffffff; --text2: #a1a1aa; --text3: #52525b;
+            --accent: #e50914; --accent-hover: #ff1a25; --accent-glow: rgba(229, 9, 20, 0.25);
+            --r: 10px; --r2: 14px; --r3: 20px;
+            --ease: cubic-bezier(0.4, 0, 0.2, 1); --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; scroll-behavior: smooth; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; position: relative; }
+        body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(229, 9, 20, 0.12) 0%, transparent 60%); pointer-events: none; z-index: 0; }
+        body::after { content: ''; position: fixed; inset: 0; opacity: 0.03; background-image: url("image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; z-index: 0; }
+        ::selection { background: var(--accent); color: #fff; }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
 
-    <!-- Main Stylesheet -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/FileToLink/style.css">
+        .loader { position: fixed; inset: 0; z-index: 999; background: #000; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s var(--ease), visibility 0.5s; }
+        .loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .spinner { width: 28px; height: 28px; border: 2px solid rgba(229,9,20,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .navbar { position: sticky; top: 0; z-index: 50; height: 56px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; background: rgba(5,5,5,0.75); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .brand-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; color: #fff; box-shadow: 0 0 16px var(--accent-glow); }
+        .brand-text { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 16px; color: #fff; letter-spacing: -0.02em; }
+        .brand-text span { color: var(--accent); }
+
+        .container { max-width: 1080px; margin: 0 auto; padding: 24px 24px 64px; position: relative; z-index: 1; }
+
+        .file-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .file-thumb { width: 56px; height: 76px; border-radius: var(--r2); background: linear-gradient(135deg, #111, #1a1a1a); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); flex-shrink: 0; }
+        .file-thumb i { font-size: 22px; color: var(--accent); opacity: 0.85; }
+        .file-info { flex: 1; min-width: 0; }
+        .file-name { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(20px, 2.5vw, 26px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+        .tag { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+        .tag-accent { background: var(--accent); color: #fff; }
+        .tag-glass { background: rgba(255,255,255,0.06); color: var(--text2); border: 1px solid var(--border); backdrop-filter: blur(8px); }
+        .file-meta { display: flex; gap: 12px; flex-wrap: wrap; }
+        .meta { font-size: 13px; color: var(--text3); display: flex; align-items: center; gap: 5px; }
+        .meta i { font-size: 11px; }
+
+        .player-shell { position: relative; border-radius: var(--r3); overflow: hidden; background: #080808; border: 1px solid var(--border); margin-bottom: 16px; box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.02); }
+        .player-shell::before { content: ''; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; background: linear-gradient(135deg, rgba(229,9,20,0.2), transparent 50%); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; z-index: 5; }
+        .player-aspect { position: relative; padding-top: 56.25%; }
+        .player-aspect video, .player-aspect .plyr { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .player-aspect .plyr { --plyr-color-main: var(--accent); --plyr-menu-background: rgba(14,14,14,0.95); --plyr-menu-color: #fff; --plyr-control-icon-size: 16px; --plyr-font-size-small: 13px; }
+        .player-aspect .plyr__video-wrapper { background: #000; }
+        .plyr__control--overlaid { background: var(--accent) !important; border-radius: 50% !important; padding: 24px !important; opacity: 0.9; transition: all 0.3s var(--ease); }
+        .plyr__control--overlaid:hover { opacity: 1 !important; transform: scale(1.08) !important; }
+
+        .toolbar { display: flex; gap: 6px; padding: 12px; flex-wrap: wrap; }
+        .tb { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: var(--r); border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: var(--text2); font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s var(--ease); white-space: nowrap; }
+        .tb:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: var(--border2); }
+        .tb:active { transform: scale(0.97); }
+        .tb i { font-size: 12px; color: var(--accent); transition: transform 0.2s; }
+        .tb:hover i { transform: scale(1.1); }
+        .tb-fill { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .tb-fill:hover { background: var(--accent-hover); box-shadow: 0 4px 16px var(--accent-glow); }
+        .tb-fill i { color: #fff; }
+        .tb-spacer { flex: 1; }
+
+        .section-label { font-size: 13px; font-weight: 600; color: var(--text3); margin: 32px 0 16px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 0.06em; }
+        .section-label i { color: var(--accent); font-size: 14px; }
+        .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+        .pcard { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: var(--r2); border: 1px solid var(--border); background: var(--surface); cursor: pointer; transition: all 0.25s var(--ease-out); text-decoration: none; color: inherit; backdrop-filter: blur(12px); }
+        .pcard:hover { border-color: rgba(229,9,20,0.3); background: rgba(229,9,20,0.06); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+        .pcard:active { transform: translateY(0) scale(0.98); }
+        .pcard-icon { width: 40px; height: 40px; border-radius: var(--r2); display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.04); flex-shrink: 0; transition: all 0.25s; }
+        .pcard:hover .pcard-icon { background: rgba(229,9,20,0.12); }
+        .pcard-icon img { width: 22px; height: 22px; object-fit: contain; }
+        .pcard-icon i { font-size: 16px; }
+        .pcard-info { flex: 1; min-width: 0; }
+        .pcard-name { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .pcard-plat { font-size: 11px; color: var(--text3); margin-top: 2px; }
+        .pcard-arrow { color: var(--text3); font-size: 11px; opacity: 0; transform: translateX(-4px); transition: all 0.25s; }
+        .pcard:hover .pcard-arrow { opacity: 1; transform: translateX(0); color: var(--accent); }
+
+        .footer { text-align: center; padding: 32px 0 16px; font-size: 12px; color: var(--text3); border-top: 1px solid var(--border); margin-top: 48px; }
+        .footer a { color: var(--accent); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+        .footer a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-radius: var(--r2); background: rgba(16,16,16,0.95); border: 1px solid var(--border2); z-index: 200; opacity: 0; pointer-events: none; transition: all 0.4s var(--ease-out); backdrop-filter: blur(16px); }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast-ic { width: 28px; height: 28px; border-radius: 50%; background: rgba(229,9,20,0.15); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+        .toast-msg { font-size: 13px; font-weight: 500; color: #fff; }
+
+        @media (max-width: 640px) {
+            .navbar { padding: 0 16px; }
+            .container { padding: 16px 12px 40px; }
+            .file-header { gap: 12px; }
+            .file-thumb { width: 48px; height: 64px; }
+            .file-name { font-size: 20px; }
+            .pgrid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+            .pcard { padding: 12px 14px; gap: 10px; }
+            .pcard-icon { width: 36px; height: 36px; border-radius: 10px; }
+            .pcard-icon img { width: 18px; height: 18px; }
+            .toolbar { padding: 10px; }
+            .tb { padding: 7px 12px; font-size: 12px; }
+            .tb-spacer { display: none; }
+        }
+    </style>
 </head>
 <body>
-    <button class="theme-toggle button-base" aria-label="Toggle Light/Dark Mode" aria-pressed="false" title="Toggle Light/Dark Mode">
-        <i class="fas fa-moon" aria-hidden="true"></i>
-    </button>
+    <div class="loader" id="loader"><div class="spinner"></div></div>
 
-    <div class="background-animation" aria-hidden="true">
-        <div class="bg-gradient"></div>
-    </div>
+    <nav class="navbar">
+        <a href="#" class="brand">
+            <div class="brand-icon">S</div>
+            <div class="brand-text">Syntax<span>Realm</span></div>
+        </a>
+    </nav>
 
-    <div class="container">
-        <header class="header">
+    <main class="container">
+        <div class="file-header">
+            <div class="file-thumb"><i class="fas fa-film"></i></div>
             <div class="file-info">
-                <h1 id="file-name">{{ file_name }}</h1>
-                <div class="file-meta" role="group" aria-label="File metadata"></div>
-            </div>
-        </header>
-
-        <main id="main-content">
-            <section class="player-container" aria-label="Video Player">
-                <video id="player" playsinline preload="metadata" controlsList="nodownload" aria-label="Video player">
-                    <source src="{{ src }}" type="{{ mime_type }}" />
-                    <p>Your browser does not support the video tag. Please <a href="{{ src }}" download>download the video</a> instead.</p>
-                </video>
-            </section>
-
-            <nav class="controls-section" aria-label="File options">
-                <div class="dropdown-container" id="stream-dropdown-container">
-                    <button type="button" class="action-button button-base secondary-button stream-btn" aria-haspopup="true" aria-expanded="false" aria-controls="stream-menu" id="stream-btn-label">
-                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                        <span>Stream</span>
-                    </button>
-                    <div class="dropdown-menu" id="stream-menu" aria-labelledby="stream-btn-label" role="menu">
-                        <div class="stream-menu-header">
-                            <h3>Open with external player</h3>
-                            <button type="button" aria-label="Close menu" class="stream-menu-close button-base">
-                                <i class="fas fa-times" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                        <div class="stream-menu-content">
-                            <div class="stream-category">
-                                <h4 class="category-heading"><i class="fas fa-mobile-screen-button" aria-hidden="true"></i> Mobile Players</h4>
-                                <div class="player-grid" role="group" aria-label="Mobile video players">
-                                    <button type="button" class="player-card dropdown-item" role="menuitem" data-player-type="vlc">
-                                        <img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/vlc.png" alt="VLC Mobile" loading="lazy" width="32" height="32" class="player-icon">
-                                        <span class="player-name">VLC Mobile</span>
-                                    </button>
-                                    <button type="button" class="player-card dropdown-item" role="menuitem" data-player-type="mxpro">
-                                        <img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/mx.png" alt="MX Player Pro" loading="lazy" width="32" height="32" class="player-icon">
-                                        <span class="player-name">MX Pro</span>
-                                    </button>
-                                    <button type="button" class="player-card dropdown-item" role="menuitem" data-player-type="mx">
-                                        <img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/mx.png" alt="MX Player" loading="lazy" width="32" height="32" class="player-icon">
-                                        <span class="player-name">MX Player</span>
-                                    </button>
-                                    <button type="button" class="player-card dropdown-item" role="menuitem" data-player-type="nplayer">
-                                        <img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/nPlayer.webp" alt="nPlayer" loading="lazy" width="32" height="32" class="player-icon">
-                                        <span class="player-name">nPlayer</span>
-                                    </button>
-                                     <button type="button" class="player-card dropdown-item" role="menuitem" data-player-type="splayer">
-                                        <img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/splayer.webp" alt="S Player" loading="lazy" width="32" height="32" class="player-icon">
-                                        <span class="player-name">S Player</span>
-                                    </button>
-                                     <button type="button" class="player-card dropdown-item" role="menuitem" data-player-type="km">
-                                        <img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/km.webp" alt="KM Player" loading="lazy" width="32" height="32" class="player-icon">
-                                        <span class="player-name">KM Player</span>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="stream-category">
-                                <h4 class="category-heading"><i class="fas fa-desktop" aria-hidden="true"></i> Desktop Players</h4>
-                                <div class="player-grid" role="group" aria-label="Desktop video players">
-                                    <button type="button" class="player-card dropdown-item" role="menuitem" data-player-type="vlc-pc" title="Open in VLC Player (PC)">
-                                        <img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/vlc.png" alt="VLC Player" loading="lazy" width="32" height="32" class="player-icon">
-                                        <span class="player-name">VLC Player</span>
-                                    </button>
-                                    <button type="button" class="player-card dropdown-item" role="menuitem" data-player-type="potplayer" title="Open in PotPlayer">
-                                        <img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/FileToLink/pot.png" alt="PotPlayer" loading="lazy" width="32" height="32" class="player-icon">
-                                        <span class="player-name">PotPlayer</span>
-                                    </button>
-                                    <button type="button" class="player-card dropdown-item" role="menuitem" data-player-type="mpc" title="Open in MPC-HC">
-                                        <img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/FileToLink/classic.png" alt="MPC-HC" loading="lazy" width="32" height="32" class="player-icon">
-                                        <span class="player-name">MPC-HC</span>
-                                    </button>
-                                    <button type="button" class="player-card dropdown-item" role="menuitem" data-player-type="kmpc" title="Open in KM Player (PC)">
-                                        <img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/km.webp" alt="KM Player" loading="lazy" width="32" height="32" class="player-icon">
-                                        <span class="player-name">KM Player</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <h1 class="file-name" id="fileName">Sample_Video_1080p.mp4</h1>
+                <div class="file-tags">
+                    <span class="tag tag-accent">Stream Ready</span>
+                    <span class="tag tag-glass">HD 1080p</span>
+                    <span class="tag tag-glass">MP4</span>
                 </div>
-                <button type="button" class="action-button button-base secondary-button" title="Download the video" aria-label="Download video file">
-                    <i class="fas fa-cloud-download-alt" aria-hidden="true"></i>
-                    <span>Download</span>
-                </button>
-                <button type="button" class="action-button button-base secondary-button" title="Copy video link" aria-label="Copy video link to clipboard">
-                    <i class="fas fa-copy" aria-hidden="true"></i>
-                    <span>Copy Link</span>
-                </button>
-            </nav>
-        </main>
-    </div>
-
-    <footer>
-        <p><span id="kps-text">⚡ SyntaxRealm</span> © <span id="current-year"></span> | <a href="https://t.me/SyntaxRealm" target="_blank" rel="noopener noreferrer" aria-label="Support Channel"><i class="fa-brands fa-telegram" aria-hidden="true"></i> <span>Telegram</span></a></p>
-    </footer>
-
-    <div class="toast" id="toast" role="alert" aria-live="polite" aria-atomic="true" aria-hidden="true">
-        <div class="toast-icon" aria-hidden="true">
-            <i class="fas fa-info-circle"></i>
+                <div class="file-meta">
+                    <span class="meta"><i class="fas fa-weight-scale"></i> <span id="fSize">247 MB</span></span>
+                    <span class="meta"><i class="fas fa-calendar"></i> <span id="fDate"></span></span>
+                    <span class="meta"><i class="fas fa-shield-halved"></i> Secure</span>
+                </div>
+            </div>
         </div>
-        <div class="toast-message">Action completed.</div>
-    </div>
 
-    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/FileToLink/script.js" defer></script>
+        <div class="player-shell">
+            <div class="player-aspect">
+                <video id="player" playsinline controls preload="metadata">
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                </video>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button class="tb tb-fill" id="dlBtn"><i class="fas fa-download"></i> Download</button>
+            <button class="tb" id="cpBtn"><i class="fas fa-link"></i> Copy Link</button>
+            <button class="tb" id="shareBtn"><i class="fas fa-share"></i> Share</button>
+            <div class="tb-spacer"></div>
+            <button class="tb" id="pipBtn" title="Picture-in-Picture"><i class="fas fa-clone"></i></button>
+        </div>
+
+        <div class="section-label"><i class="fas fa-tv"></i> Open in External Player</div>
+        <div class="pgrid">
+            <a class="pcard" data-p="vlc"><div class="pcard-icon"><img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/vlc.png" alt="VLC" loading="lazy"></div><div class="pcard-info"><div class="pcard-name">VLC Player</div><div class="pcard-plat">Android · iOS</div></div><div class="pcard-arrow"><i class="fas fa-arrow-right"></i></div></a>
+            <a class="pcard" data-p="mxpro"><div class="pcard-icon"><img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/mx.png" alt="MX" loading="lazy"></div><div class="pcard-info"><div class="pcard-name">MX Player Pro</div><div class="pcard-plat">Android</div></div><div class="pcard-arrow"><i class="fas fa-arrow-right"></i></div></a>
+            <a class="pcard" data-p="mx"><div class="pcard-icon"><img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/mx.png" alt="MX" loading="lazy"></div><div class="pcard-info"><div class="pcard-name">MX Player</div><div class="pcard-plat">Android</div></div><div class="pcard-arrow"><i class="fas fa-arrow-right"></i></div></a>
+            <a class="pcard" data-p="nplayer"><div class="pcard-icon"><img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/nPlayer.webp" alt="nPlayer" loading="lazy"></div><div class="pcard-info"><div class="pcard-name">nPlayer</div><div class="pcard-plat">iOS</div></div><div class="pcard-arrow"><i class="fas fa-arrow-right"></i></div></a>
+            <a class="pcard" data-p="infuse"><div class="pcard-icon"><i class="fas fa-play" style="color:var(--accent)"></i></div><div class="pcard-info"><div class="pcard-name">Infuse</div><div class="pcard-plat">iOS · tvOS</div></div><div class="pcard-arrow"><i class="fas fa-arrow-right"></i></div></a>
+            <a class="pcard" data-p="pot"><div class="pcard-icon"><img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/FileToLink/pot.png" alt="Pot" loading="lazy"></div><div class="pcard-info"><div class="pcard-name">PotPlayer</div><div class="pcard-plat">Windows</div></div><div class="pcard-arrow"><i class="fas fa-arrow-right"></i></div></a>
+            <a class="pcard" data-p="vlcpc"><div class="pcard-icon"><img src="https://cdn.jsdelivr.net/gh/fyaz05/Resources@main/HydroStreamerBot/vlc.png" alt="VLC" loading="lazy"></div><div class="pcard-info"><div class="pcard-name">VLC Desktop</div><div class="pcard-plat">Win · Mac · Linux</div></div><div class="pcard-arrow"><i class="fas fa-arrow-right"></i></div></a>
+            <a class="pcard" data-p="iina"><div class="pcard-icon"><i class="fas fa-circle-play" style="color:#14b8a6"></i></div><div class="pcard-info"><div class="pcard-name">IINA</div><div class="pcard-plat">macOS</div></div><div class="pcard-arrow"><i class="fas fa-arrow-right"></i></div></a>
+        </div>
+
+        <div class="footer">⚡ Powered by <a href="https://t.me/SyntaxRealm" target="_blank" rel="noopener">SyntaxRealm</a> · © <span id="yr"></span></div>
+    </main>
+
+    <div class="toast" id="toast"><div class="toast-ic"><i class="fas fa-check"></i></div><div class="toast-msg" id="toastMsg">Done</div></div>
+
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('yr').textContent = new Date().getFullYear();
+        document.getElementById('fDate').textContent = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        setTimeout(() => document.getElementById('loader').classList.add('hidden'), 600);
+
+        const video = document.getElementById('player');
+        const src = video.querySelector('source') ? video.querySelector('source').src : video.src;
+        const enc = encodeURIComponent(src);
+
+        if (typeof Plyr !== 'undefined') {
+            new Plyr(video, {
+                controls: ['play-large', 'play', 'progress', 'current-time', 'duration', 'mute', 'volume', 'settings', 'pip', 'fullscreen'],
+                settings: ['quality', 'speed'],
+                speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] }
+            });
+        }
+
+        const deepLinks = {
+            vlc: `vlc://${src}`, mxpro: `intent:${src}#Intent;package=com.mxtech.videoplayer.pro;scheme=https;end`,
+            mx: `intent:${src}#Intent;package=com.mxtech.videoplayer.ad;scheme=https;end`,
+            nplayer: `nplayer-${src}`, infuse: `infuse://x-callback-url/play?url=${enc}`,
+            pot: `potplayer://${src}`, vlcpc: `vlc://${src}`, iina: `iina://weblink?url=${enc}`
+        };
+        const pNames = { vlc: 'VLC', mxpro: 'MX Pro', mx: 'MX Player', nplayer: 'nPlayer', infuse: 'Infuse', pot: 'PotPlayer', vlcpc: 'VLC Desktop', iina: 'IINA' };
+
+        document.querySelectorAll('.pcard').forEach(c => c.addEventListener('click', e => {
+            e.preventDefault();
+            const link = deepLinks[c.dataset.p];
+            if (link) window.open(link, '_blank');
+            toast('Opening ' + pNames[c.dataset.p] + '...');
+        }));
+
+        document.getElementById('dlBtn').addEventListener('click', () => {
+            const a = document.createElement('a'); a.href = src; a.download = ''; a.target = '_blank'; a.rel = 'noopener';
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); toast('Download started');
+        });
+        document.getElementById('cpBtn').addEventListener('click', async () => {
+            try { await navigator.clipboard.writeText(src); } catch {
+                const t = document.createElement('textarea'); t.value = src; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t);
+            }
+            toast('Link copied');
+        });
+        document.getElementById('shareBtn').addEventListener('click', async () => {
+            if (navigator.share) try { await navigator.share({ title: 'Stream', url: src }); } catch {}
+            else { await navigator.clipboard.writeText(src); toast('Link copied'); }
+        });
+        document.getElementById('pipBtn').addEventListener('click', async () => {
+            try { document.pictureInPictureElement ? await document.exitPictureInPicture() : await video.requestPictureInPicture(); }
+            catch { toast('PiP unavailable'); }
+        });
+
+        let tt;
+        function toast(m) {
+            const t = document.getElementById('toast'); document.getElementById('toastMsg').textContent = m;
+            t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2500);
+        }
+    });
+    </script>
 </body>
 </html>
 
