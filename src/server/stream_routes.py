@@ -183,10 +183,12 @@ async def media_delivery(request: web.Request):
 
         try:
             # Use primary streamer for fast metadata with safety timeout
-            logger.debug(f"Fetching metadata for ID {message_id}...")
-            file_info = await asyncio.wait_for(
-                primary_streamer.get_file_info(message_id), timeout=15)
-            logger.debug(f"Metadata fetched successfully for ID {message_id}")
+            # Also keep the message object to reuse it for streaming
+            logger.debug(f"Fetching message for ID {message_id}...")
+            message = await asyncio.wait_for(
+                primary_streamer.get_message(message_id), timeout=15)
+            file_info = primary_streamer.get_file_info_sync(message)
+            logger.debug(f"Message fetched successfully for ID {message_id}")
             if not file_info.get('unique_id'):
                 raise FileNotFound("File unique ID not found in info.")
 
@@ -244,7 +246,7 @@ async def media_delivery(request: web.Request):
                     bytes_to_skip = start % CHUNK_SIZE
 
                     async for chunk in streamer.stream_file(
-                            message_id, offset=start, limit=content_length):
+                            message_id, offset=start, limit=content_length, message=message):
                         if bytes_to_skip > 0:
                             if len(chunk) <= bytes_to_skip:
                                 bytes_to_skip -= len(chunk)

@@ -44,8 +44,10 @@ class ByteStreamer:
             raise FileNotFound(f"Message {message_id} not found")
         return message
 
-    async def stream_file(self, message_id: int, offset: int = 0, limit: int = 0) -> AsyncGenerator[bytes, None]:
-        message = await self.get_message(message_id)
+    async def stream_file(self, message_id: int, offset: int = 0, limit: int = 0, message: Message = None) -> AsyncGenerator[bytes, None]:
+        if not message:
+            message = await self.get_message(message_id)
+        
         
         chunk_offset = offset // (1024 * 1024)
         chunk_limit = (limit + (1024 * 1024) - 1) // (1024 * 1024) if limit > 0 else 0
