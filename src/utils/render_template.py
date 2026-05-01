@@ -25,14 +25,14 @@ template_env = Environment(
 )
 
 def get_file_tags(file_name: str, media) -> list[str]:
-    tags = ["Stream Ready"]
+    tags = []
     
     # Extract extension
     _, ext = os.path.splitext(file_name)
     if ext:
         tags.append(ext[1:].upper())
     
-    # Extract resolution from filename
+    # Extract resolution from filename (regex is often more accurate for anime/movies)
     res_match = re.search(r'(\d{3,4}p)', file_name, re.IGNORECASE)
     if res_match:
         tags.append(res_match.group(1).upper())
@@ -44,6 +44,18 @@ def get_file_tags(file_name: str, media) -> list[str]:
         elif h >= 720: tags.append("HD 720P")
         elif h >= 480: tags.append("480P")
         elif h >= 360: tags.append("360P")
+
+    # Extra metadata from filename
+    if re.search(r'HEVC|H\.265|x265|10bit', file_name, re.IGNORECASE):
+        tags.append("HEVC 10-BIT")
+    
+    if re.search(r'HDR|Dual|Multi', file_name, re.IGNORECASE):
+        hdr_match = re.search(r'HDR', file_name, re.IGNORECASE)
+        if hdr_match: tags.append("HDR")
+        if re.search(r'Dual|Multi', file_name, re.IGNORECASE): tags.append("Multi-Audio")
+
+    if not tags:
+        tags.append("Media")
     
     return tags
 
