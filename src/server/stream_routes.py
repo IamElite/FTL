@@ -173,15 +173,19 @@ async def media_delivery(request: web.Request):
         path = request.match_info["path"]
         message_id, secure_hash = parse_media_request(path, request.query)
 
+        logger.info(f"Request started for path: {path}")
         client_id, streamer = select_optimal_client()
         primary_streamer = get_streamer(0)
 
         work_loads[client_id] += 1
+        logger.debug(f"Selected client {client_id} for path {path}")
 
         try:
             # Use primary streamer for fast metadata with safety timeout
+            logger.debug(f"Fetching metadata for ID {message_id}...")
             file_info = await asyncio.wait_for(
                 primary_streamer.get_file_info(message_id), timeout=15)
+            logger.debug(f"Metadata fetched successfully for ID {message_id}")
             if not file_info.get('unique_id'):
                 raise FileNotFound("File unique ID not found in info.")
 
@@ -225,10 +229,13 @@ async def media_delivery(request: web.Request):
 
             if request.method == 'HEAD':
                 work_loads[client_id] -= 1
+                logger.info(f"HEAD request completed for {path}")
                 return web.Response(
                     status=206 if range_header else 200,
                     headers=headers
                 )
+
+            logger.info(f"Starting stream for {path} (Range: {range_header or 'None'})")
 
             async def stream_generator():
                 try:

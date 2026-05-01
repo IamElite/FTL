@@ -22,8 +22,13 @@ class ByteStreamer:
         retries = 0
         while retries < 5:
             try:
-                message = await self.client.get_messages(self.chat_id, message_id)
+                # Use a small internal timeout for the API call itself
+                message = await asyncio.wait_for(
+                    self.client.get_messages(self.chat_id, message_id), timeout=10)
                 break
+            except asyncio.TimeoutError:
+                logger.debug(f"Timeout fetching message {message_id}, retrying...")
+                retries += 1
             except FloodWait as e:
                 logger.debug(f"FloodWait: get_message, sleep {e.value}s")
                 await asyncio.sleep(e.value)
