@@ -265,7 +265,7 @@ async def media_delivery(request: web.Request):
                 bytes_to_skip = start % PART_SIZE
                 stream_start_time = time.time()
                 
-                async def stream_file(
+                async for chunk in streamer.stream_file(
                         message_id, offset=start, limit=content_length, message=message):
                     if bytes_to_skip > 0:
                         if len(chunk) <= bytes_to_skip:
