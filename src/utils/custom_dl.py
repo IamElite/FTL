@@ -1,7 +1,7 @@
 # src/utils/custom_dl.py
 
 import asyncio
-from typing import Any, AsyncGenerator, Dict, Optional, List
+from typing import Any, AsyncGenerator, Dict, Optional, List, Tuple
 
 from pyrogram import Client
 from pyrogram.errors import FloodWait, AuthKeyUnregistered
