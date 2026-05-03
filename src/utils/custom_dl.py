@@ -1,7 +1,7 @@
 # src/utils/custom_dl.py
 
 import asyncio
-from typing import Any, AsyncGenerator, Dict, Optional, Tuple
+from typing import Any, AsyncGenerator, Dict, Optional, List
 
 from pyrogram import Client
 from pyrogram.errors import FloodWait, AuthKeyUnregistered
@@ -61,14 +61,14 @@ class ByteStreamer:
             return None
         
         base_name = match.group(1)
-        part_num = match.group(2)
         chat_id = message.chat.id
         
         try:
             parts = []
             async for msg in self.client.get_chat_history(chat_id, limit=100):
                 if msg.document and msg.document.file_name:
-                    if msg.document.file_name.startswith(base_name + '.part') or msg.document.file_name.startswith(base_name + '.'):
+                    fname = msg.document.file_name
+                    if (fname.startswith(base_name + '.part') or fname.startswith(base_name + '.')) and 'part' not in fname.lower():
                         if msg.id != message.id:
                             parts.append(msg)
             parts.append(message)
