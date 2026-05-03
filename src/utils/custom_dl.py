@@ -46,6 +46,39 @@ class ByteStreamer:
             raise FileNotFound(f"Message {message_id} not found")
         return message
 
+    async def check_multi_part_file(self, message: Message) -> Optional[List[Message]]:
+        media = message.document
+        if not media or not media.file_name:
+            return None
+        
+        file_name = media.file_name
+        import re
+        match = re.match(r'^(.+?)\.part(\d+)(?:\.mp4)?$', file_name, re.IGNORECASE)
+        if not match:
+            match = re.match(r'^(.+?)\.(\d+)$', file_name, re.IGNORECASE)
+        
+        if not match:
+            return None
+        
+        base_name = match.group(1)
+        part_num = match.group(2)
+        chat_id = message.chat.id
+        
+        try:
+            parts = []
+            async for msg in self.client.get_chat_history(chat_id, limit=100):
+                if msg.document and msg.document.file_name:
+                    if msg.document.file_name.startswith(base_name + '.part') or msg.document.file_name.startswith(base_name + '.'):
+                        if msg.id != message.id:
+                            parts.append(msg)
+            parts.append(message)
+            parts.sort(key=lambda x: x.id)
+            logger.info(f"Found {len(parts)} parts for multi-part file")
+            return parts if len(parts) > 1 else None
+        except Exception as e:
+            logger.warning(f"Error checking multi-part: {e}")
+            return None
+
     async def get_origin_info(self, message_id: int) -> Optional[Dict[str, Any]]:
         try:
             origin = await db.get_file_origin(message_id)
