@@ -60,12 +60,12 @@
         
         /* Custom Plyr styling */
         .player-aspect .plyr { position: absolute; inset: 0; }
-        .player-aspect .plyr__video-wrapper { background: #000; }
+        .player-aspect .plyr__video-wrapper { background: #000; height: 100%; }
         .plyr__control--overlaid { background: var(--accent) !important; border-radius: 50% !important; padding: 24px !important; opacity: 0.9; transition: transform 0.3s; }
         .plyr__control--overlaid:hover { opacity: 1 !important; transform: scale(1.08) !important; }
         
-        /* Gesture Overlay */
-        .gesture-overlay { position: absolute; inset: 0; z-index: 5; display: flex; cursor: pointer; }
+        /* Gesture Overlay - FIXED: bottom 50px so it doesn't block Plyr controls */
+        .gesture-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 50px; z-index: 5; display: flex; cursor: pointer; }
         .gesture-left { flex: 1; position: relative; }
         .gesture-center { flex: 1; position: relative; }
         .gesture-right { flex: 1; position: relative; }
@@ -76,7 +76,7 @@
             background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
             border-radius: var(--r); padding: 16px; display: none;
             align-items: center; gap: 12px; z-index: 10;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s; pointer-events: none;
         }
         .gesture-indicator.show { display: flex; }
         .gi-brightness { left: 20px; }
@@ -94,7 +94,7 @@
             background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
             border-radius: 50%; width: 72px; height: 72px;
             display: none; align-items: center; justify-content: center;
-            flex-direction: column; gap: 4px; z-index: 10;
+            flex-direction: column; gap: 4px; z-index: 10; pointer-events: none;
             animation: seekPop 0.8s ease forwards;
         }
         .seek-feedback.show { display: flex; }
@@ -108,7 +108,7 @@
             background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
             border-radius: var(--r); padding: 8px 14px;
             display: none; align-items: center; gap: 8px; z-index: 10;
-            font-size: 13px; font-weight: 600;
+            font-size: 13px; font-weight: 600; pointer-events: none;
         }
         .speed-indicator.show { display: flex; }
         .speed-indicator i { color: var(--accent); }
@@ -117,11 +117,10 @@
         .buffer-overlay {
             position: absolute; inset: 0; z-index: 8;
             background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);
-            display: flex; align-items: center; justify-content: center;
-            flex-direction: column; gap: 16px;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 16px; pointer-events: none;
         }
-        .buffer-overlay.show { opacity: 1; pointer-events: all; }
+        .buffer-overlay.show { display: flex; }
         .buffer-spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
         .buffer-text { font-size: 14px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
         .buffer-text i { color: var(--accent); }
@@ -309,69 +308,47 @@
         let speedInterval;
 
         function getNetworkSpeed() {
-            // Use Network Information API if available
             const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
             if (conn) {
                 const downlink = conn.downlink; // Mbps
                 return downlink ? downlink.toFixed(1) : null;
             }
-            // Fallback: estimate from buffered data
             if (video.buffered.length > 0) {
                 const bufferedEnd = video.buffered.end(video.buffered.length - 1);
                 const currentTime = video.currentTime;
                 const bufferedDuration = bufferedEnd - currentTime;
-                if (bufferedDuration > 0 && video.readyState >= 3) {
-                    // Rough estimate
-                    return 'Est.';
-                }
+                if (bufferedDuration > 0 && video.readyState >= 3) return 'Est.';
             }
             return null;
         }
 
-        let bufferTimeout;
-        let speedInterval;
         function updateSpeedDisplay() {
             const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            let baseSpeed = (conn && conn.downlink) ? conn.downlink : 5.0;
-            let speed = baseSpeed * (0.85 + Math.random() * 0.3);
-            const unit = speed >= 1 ? 'Mbps' : 'kbps';
-            const val = speed >= 1 ? speed.toFixed(1) : (speed * 1024).toFixed(0);
-            const speedValEl = document.getElementById('netSpeed');
-            if (speedValEl) speedValEl.textContent = val + ' ' + unit;
+            if (conn && conn.downlink) {
+                const speed = conn.downlink;
+                const unit = speed >= 1 ? 'Mbps' : 'kbps';
+                const val = speed >= 1 ? speed.toFixed(1) : (speed * 1024).toFixed(0);
+                netSpeedEl.textContent = val + ' ' + unit;
+            } else {
+                netSpeedEl.textContent = 'Checking...';
+            }
         }
 
-        const hideBuffer = () => {
-            clearTimeout(bufferTimeout);
-            bufferOverlay.classList.remove('show');
-            if (speedInterval) {
-                clearInterval(speedInterval);
-                speedInterval = null;
-            }
-        };
-
         video.addEventListener('waiting', () => {
-            clearTimeout(bufferTimeout);
-            // Don't show if seeking or paused
-            if (video.seeking || video.paused) return;
-            
-            bufferTimeout = setTimeout(() => {
-                if (video.paused || video.seeking || video.readyState > 2) return;
-                bufferOverlay.classList.add('show');
-                updateSpeedDisplay();
-                if (!speedInterval) speedInterval = setInterval(updateSpeedDisplay, 2000);
-            }, 800); // Increased delay to 800ms for "smarter" feel
+            bufferOverlay.classList.add('show');
+            updateSpeedDisplay();
+            speedInterval = setInterval(updateSpeedDisplay, 1000);
         });
 
-        video.addEventListener('playing', hideBuffer);
-        video.addEventListener('canplay', hideBuffer);
-        video.addEventListener('seeked', hideBuffer);
-        video.addEventListener('seeking', () => {
-            clearTimeout(bufferTimeout);
-            // Hide immediately if user starts seeking
+        video.addEventListener('playing', () => {
             bufferOverlay.classList.remove('show');
+            clearInterval(speedInterval);
         });
-        video.addEventListener('stalled', hideBuffer);
-        video.addEventListener('error', hideBuffer);
+
+        video.addEventListener('canplay', () => {
+            bufferOverlay.classList.remove('show');
+            clearInterval(speedInterval);
+        });
 
         // ===== 2. GESTURE CONTROLS (MX Player Style) =====
         const gestureOverlay = document.getElementById('gestureOverlay');
@@ -396,10 +373,9 @@
         const speedTextEl = document.getElementById('speedText');
 
         let currentBrightness = 100;
-        let currentVolume = 100;
         let brightnessTimeout, volumeTimeout, speedTimeout;
 
-        // Brightness Control (Left Side)
+        // Brightness Control (Left Side) - Controls CSS Filter
         let brightnessStartY = 0;
         let brightnessStartVal = 100;
 
@@ -415,7 +391,6 @@
             let newBrightness = Math.min(100, Math.max(0, brightnessStartVal + deltaY * sensitivity));
             currentBrightness = newBrightness;
 
-            // Apply brightness filter to video
             video.style.filter = `brightness(${currentBrightness / 100})`;
 
             brightnessInd.classList.add('show');
@@ -426,31 +401,35 @@
             brightnessTimeout = setTimeout(() => brightnessInd.classList.remove('show'), 1500);
         }, { passive: false });
 
-        // Volume Control (Right Side)
+        // Volume Control (Right Side) - Synced with Plyr
         let volumeStartY = 0;
-        let volumeStartVal = 100;
+        let volumeStartVal = 1; // Native audio is 0.0 to 1.0
 
         gestureRight.addEventListener('touchstart', (e) => {
             volumeStartY = e.touches[0].clientY;
-            volumeStartVal = currentVolume;
+            // Get current volume from Plyr or Native Video
+            volumeStartVal = plyr ? plyr.volume : video.volume;
         }, { passive: true });
 
         gestureRight.addEventListener('touchmove', (e) => {
             e.preventDefault();
             const deltaY = volumeStartY - e.touches[0].clientY;
-            const sensitivity = 0.5;
-            let newVolume = Math.min(100, Math.max(0, volumeStartVal + deltaY * sensitivity));
-            currentVolume = newVolume;
+            // Map pixel movement to 0.0 - 1.0 range (lower sensitivity for volume)
+            const sensitivity = 0.005; 
+            let newVolume = Math.min(1, Math.max(0, volumeStartVal + deltaY * sensitivity));
+            
+            // Sync with Plyr API so UI updates properly
+            if(plyr) plyr.volume = newVolume;
+            else video.volume = newVolume;
 
-            video.volume = currentVolume / 100;
+            const displayVol = Math.round(newVolume * 100);
 
             volumeInd.classList.add('show');
-            volumeBar.style.width = currentVolume + '%';
-            volumeVal.textContent = Math.round(currentVolume) + '%';
+            volumeBar.style.width = displayVol + '%';
+            volumeVal.textContent = displayVol + '%';
 
-            // Update volume icon
-            if (currentVolume === 0) volumeIcon.className = 'fas fa-volume-xmark';
-            else if (currentVolume < 50) volumeIcon.className = 'fas fa-volume-low';
+            if (displayVol === 0) volumeIcon.className = 'fas fa-volume-xmark';
+            else if (displayVol < 50) volumeIcon.className = 'fas fa-volume-low';
             else volumeIcon.className = 'fas fa-volume-high';
 
             clearTimeout(volumeTimeout);
@@ -466,7 +445,8 @@
             const now = Date.now();
             if (now - lastTapLeft < doubleTapDelay) {
                 // Double tap - Seek Backward
-                video.currentTime = Math.max(0, video.currentTime - 10);
+                if(plyr) plyr.rewind(10);
+                else video.currentTime = Math.max(0, video.currentTime - 10);
                 showSeekFeedback('backward', '-10s');
             }
             lastTapLeft = now;
@@ -476,17 +456,16 @@
             const now = Date.now();
             if (now - lastTapRight < doubleTapDelay) {
                 // Double tap - Seek Forward
-                video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                if(plyr) plyr.forward(10);
+                else video.currentTime = Math.min(video.duration, video.currentTime + 10);
                 showSeekFeedback('forward', '+10s');
             }
             lastTapRight = now;
         });
 
         function showSeekFeedback(direction, text) {
-            seekFeedback.classList.add('show');
-            seekFeedback.style.animation = 'none';
-            seekFeedback.offsetHeight; // trigger reflow
-            seekFeedback.style.animation = '';
+            seekFeedback.classList.remove('show');
+            void seekFeedback.offsetWidth; // trigger reflow to restart animation
             seekFeedback.classList.add('show');
             
             if (direction === 'forward') {
@@ -503,23 +482,28 @@
         let tapCount = 0;
         let tapTimer;
         const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
-        let currentSpeedIndex = 2;
+        let currentSpeedIndex = 2; // Default 1x
 
         gestureCenter.addEventListener('click', (e) => {
             tapCount++;
             if (tapCount === 1) {
                 tapTimer = setTimeout(() => {
                     // Single tap - Play/Pause
-                    if (video.paused) video.play();
-                    else video.pause();
+                    if(plyr) {
+                        plyr.playing ? plyr.pause() : plyr.play();
+                    } else {
+                        video.paused ? video.play() : video.pause();
+                    }
                     tapCount = 0;
-                }, 250);
+                }, doubleTapDelay);
             } else if (tapCount === 2) {
                 clearTimeout(tapTimer);
                 tapCount = 0;
                 // Double tap center - Toggle Speed
                 currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
-                video.playbackRate = speeds[currentSpeedIndex];
+                if(plyr) plyr.speed = speeds[currentSpeedIndex];
+                else video.playbackRate = speeds[currentSpeedIndex];
+                
                 speedInd.classList.add('show');
                 speedTextEl.textContent = speeds[currentSpeedIndex] + 'x';
                 clearTimeout(speedTimeout);
