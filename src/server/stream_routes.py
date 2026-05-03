@@ -255,6 +255,9 @@ async def media_delivery(request: web.Request):
                 headers=headers
             )
             await resp.prepare(request)
+            
+            if hasattr(resp, 'enable_nodelay'):
+                resp.enable_nodelay()
 
             try:
                 bytes_sent = 0
@@ -262,7 +265,7 @@ async def media_delivery(request: web.Request):
                 bytes_to_skip = start % PART_SIZE
                 stream_start_time = time.time()
                 
-                async for chunk in streamer.stream_file(
+                async def stream_file(
                         message_id, offset=start, limit=content_length, message=message):
                     if bytes_to_skip > 0:
                         if len(chunk) <= bytes_to_skip:
@@ -279,6 +282,8 @@ async def media_delivery(request: web.Request):
                         try:
                             await resp.write(chunk)
                             bytes_sent += len(chunk)
+                            if bytes_sent % (10 * 1024 * 1024) == 0:
+                                await resp.drain()
                         except (ConnectionResetError, BrokenPipeError) as e:
                             stream_duration = time.time() - stream_start_time
                             logger.warning(
