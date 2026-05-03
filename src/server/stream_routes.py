@@ -234,7 +234,8 @@ async def media_delivery(request: web.Request):
                     f"{disposition}; filename*=UTF-8''{quote(filename)}"),
                 "Accept-Ranges": "bytes",
                 "Cache-Control": "public, max-age=31536000",
-                "Connection": "keep-alive"
+                "Connection": "keep-alive",
+                "X-Content-Duration": str(file_size)
             }
 
             if range_header:

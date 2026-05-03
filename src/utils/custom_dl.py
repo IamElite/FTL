@@ -54,27 +54,26 @@ class ByteStreamer:
         chunk_offset = offset // PART_SIZE
         chunk_limit = (limit + PART_SIZE - 1) // PART_SIZE if limit > 0 else 0
         retries = 0
-        max_retries = 3
+        max_retries = 5
 
         while retries <= max_retries:
             try:
-                logger.debug(f"Starting stream_media for message {message_id} at chunk {chunk_offset}, attempt {retries + 1}")
                 async for chunk in self.client.stream_media(message, offset=chunk_offset, limit=chunk_limit):
                     yield chunk
-                logger.debug(f"Finished stream_media for message {message_id}")
                 break
             except FloodWait as e:
-                logger.warning(f"FloodWait in stream_file: sleeping {e.value}s (attempt {retries + 1}/{max_retries + 1})")
-                await asyncio.sleep(e.value)
+                wait_time = min(e.value, 30)
+                logger.warning(f"FloodWait: sleeping {wait_time}s, attempt {retries + 1}/{max_retries + 1}")
+                await asyncio.sleep(wait_time)
                 retries += 1
             except AuthKeyUnregistered:
                 logger.error(f"AuthKeyUnregistered for message {message_id}")
                 raise
             except Exception as e:
-                logger.error(f"Error in stream_media for message {message_id}: {e} (attempt {retries + 1}/{max_retries + 1})")
+                logger.warning(f"Stream error for {message_id}: {e}, attempt {retries + 1}/{max_retries + 1}")
                 retries += 1
                 if retries <= max_retries:
-                    await asyncio.sleep(1)
+                    await asyncio.sleep(min(retries * 2, 10))
                 else:
                     break
 
