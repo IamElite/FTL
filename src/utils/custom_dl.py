@@ -50,27 +50,33 @@ class ByteStreamer:
             message = await self.get_message(message_id)
         
         
-        # Pyrogram uses 1MB chunks internally for stream_media
         PART_SIZE = 1024 * 1024
         chunk_offset = offset // PART_SIZE
         chunk_limit = (limit + PART_SIZE - 1) // PART_SIZE if limit > 0 else 0
+        retries = 0
+        max_retries = 3
 
-        while True:
+        while retries <= max_retries:
             try:
-                logger.debug(f"Starting stream_media for message {message_id} at chunk {chunk_offset}")
+                logger.debug(f"Starting stream_media for message {message_id} at chunk {chunk_offset}, attempt {retries + 1}")
                 async for chunk in self.client.stream_media(message, offset=chunk_offset, limit=chunk_limit):
                     yield chunk
                 logger.debug(f"Finished stream_media for message {message_id}")
                 break
             except FloodWait as e:
-                logger.debug(f"FloodWait: stream_file, sleep {e.value}s")
+                logger.warning(f"FloodWait in stream_file: sleeping {e.value}s (attempt {retries + 1}/{max_retries + 1})")
                 await asyncio.sleep(e.value)
+                retries += 1
             except AuthKeyUnregistered:
-                # Re-raise so stream_routes can mark the client as dead
+                logger.error(f"AuthKeyUnregistered for message {message_id}")
                 raise
             except Exception as e:
-                logger.error(f"Error in stream_media for message {message_id}: {e}")
-                break
+                logger.error(f"Error in stream_media for message {message_id}: {e} (attempt {retries + 1}/{max_retries + 1})")
+                retries += 1
+                if retries <= max_retries:
+                    await asyncio.sleep(1)
+                else:
+                    break
 
     def get_file_info_sync(self, message: Message) -> Dict[str, Any]:
         media = message.document or message.video or message.audio or message.photo

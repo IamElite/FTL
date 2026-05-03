@@ -260,6 +260,8 @@ async def media_delivery(request: web.Request):
                 bytes_sent = 0
                 PART_SIZE = 1024 * 1024
                 bytes_to_skip = start % PART_SIZE
+                stream_start_time = time.time()
+                
                 async for chunk in streamer.stream_file(
                         message_id, offset=start, limit=content_length, message=message):
                     if bytes_to_skip > 0:
@@ -274,15 +276,34 @@ async def media_delivery(request: web.Request):
                         chunk = chunk[:remaining]
                     
                     if chunk:
-                        await resp.write(chunk)
-                        bytes_sent += len(chunk)
+                        try:
+                            await resp.write(chunk)
+                            bytes_sent += len(chunk)
+                        except (ConnectionResetError, BrokenPipeError) as e:
+                            stream_duration = time.time() - stream_start_time
+                            logger.warning(
+                                f"Client disconnected during stream for {path}: "
+                                f"sent {bytes_sent}/{content_length} bytes in {stream_duration:.1f}s - {e}")
+                            break
                     
                     if bytes_sent >= content_length:
                         break
                 
+                stream_duration = time.time() - stream_start_time
+                logger.info(
+                    f"Stream completed for {path}: "
+                    f"{bytes_sent}/{content_length} bytes in {stream_duration:.1f}s")
                 await resp.write_eof()
-            except (ConnectionError, asyncio.CancelledError):
-                logger.debug(f"Stream interrupted for {path}")
+            except asyncio.CancelledError:
+                stream_duration = time.time() - stream_start_time
+                logger.warning(
+                    f"Stream cancelled for {path}: "
+                    f"sent {bytes_sent}/{content_length} bytes in {stream_duration:.1f}s")
+            except (ConnectionError, ConnectionResetError, BrokenPipeError) as e:
+                stream_duration = time.time() - stream_start_time
+                logger.warning(
+                    f"Connection error for {path}: "
+                    f"sent {bytes_sent}/{content_length} bytes in {stream_duration:.1f}s - {e}")
             except AuthKeyUnregistered:
                 logger.error(f"Client ID {client_id} is unregistered during stream. Removing from pool.")
                 dead_clients.add(client_id)
