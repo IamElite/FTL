@@ -38,12 +38,54 @@ MESSAGE_DELAY = 0.5
 
 
 async def fwd_media(m_msg: Message) -> Optional[Message]:
+    from src.utils.database import db
+    from src.utils.file_properties import get_hash
     try:
-        return await handle_flood_wait(m_msg.copy, chat_id=Var.BIN_CHANNEL)
+        stored_msg = await handle_flood_wait(m_msg.copy, chat_id=Var.BIN_CHANNEL)
+        if stored_msg and m_msg.chat and m_msg.id:
+            try:
+                media = m_msg.document or m_msg.video or m_msg.audio or m_msg.photo
+                file_unique_id = getattr(media, 'file_unique_id', None) if media else None
+                file_hash = get_hash(m_msg) if media else None
+                file_size = getattr(media, 'file_size', 0) if media else 0
+                file_name = getattr(media, 'file_name', None) if media else None
+                if file_unique_id:
+                    await db.save_file_origin(
+                        bin_message_id=stored_msg.id,
+                        origin_chat_id=m_msg.chat.id,
+                        origin_message_id=m_msg.id,
+                        file_unique_id=file_unique_id,
+                        file_hash=file_hash or "",
+                        file_size=file_size or 0,
+                        file_name=file_name or ""
+                    )
+            except Exception as e:
+                logger.debug(f"Could not save file origin: {e}")
+        return stored_msg
     except Exception as e:
         if "MEDIA_CAPTION_TOO_LONG" in str(e):
             logger.debug(f"MEDIA_CAPTION_TOO_LONG error, retrying without caption: {e}")
-            return await handle_flood_wait(m_msg.copy, chat_id=Var.BIN_CHANNEL, caption=None)
+            stored_msg = await handle_flood_wait(m_msg.copy, chat_id=Var.BIN_CHANNEL, caption=None)
+            if stored_msg and m_msg.chat and m_msg.id:
+                try:
+                    media = m_msg.document or m_msg.video or m_msg.audio or m_msg.photo
+                    file_unique_id = getattr(media, 'file_unique_id', None) if media else None
+                    file_hash = get_hash(m_msg) if media else None
+                    file_size = getattr(media, 'file_size', 0) if media else 0
+                    file_name = getattr(media, 'file_name', None) if media else None
+                    if file_unique_id:
+                        await db.save_file_origin(
+                            bin_message_id=stored_msg.id,
+                            origin_chat_id=m_msg.chat.id,
+                            origin_message_id=m_msg.id,
+                            file_unique_id=file_unique_id,
+                            file_hash=file_hash or "",
+                            file_size=file_size or 0,
+                            file_name=file_name or ""
+                        )
+                except Exception as e:
+                    logger.debug(f"Could not save file origin: {e}")
+            return stored_msg
         logger.error(f"Error fwd_media copy: {e}", exc_info=True)
         return None
 

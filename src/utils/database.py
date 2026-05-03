@@ -16,6 +16,7 @@ class Database:
         self.token_col: AsyncIOMotorCollection = self.db.tokens
         self.authorized_users_col: AsyncIOMotorCollection = self.db.authorized_users
         self.restart_message_col: AsyncIOMotorCollection = self.db.restart_message
+        self.file_origin_col: AsyncIOMotorCollection = self.db.file_origins
 
     async def ensure_indexes(self):
         try:
@@ -28,6 +29,8 @@ class Database:
             await self.token_col.create_index("activated")
             await self.restart_message_col.create_index("message_id", unique=True)
             await self.restart_message_col.create_index("timestamp", expireAfterSeconds=3600)
+            await self.file_origin_col.create_index("bin_message_id", unique=True)
+            await self.file_origin_col.create_index("origin_hash")
 
             logger.debug("Database indexes ensured.")
         except Exception as e:
@@ -205,6 +208,40 @@ class Database:
             logger.debug(f"Deleted restart message {message_id}.")
         except Exception as e:
             logger.error(f"Error deleting restart message {message_id}: {e}", exc_info=True)
+
+    async def save_file_origin(self, bin_message_id: int, origin_chat_id: int, origin_message_id: int,
+                               file_unique_id: str, file_hash: str, file_size: int, file_name: str) -> None:
+        try:
+            await self.file_origin_col.update_one(
+                {"bin_message_id": bin_message_id},
+                {"$set": {
+                    "origin_chat_id": origin_chat_id,
+                    "origin_message_id": origin_message_id,
+                    "file_unique_id": file_unique_id,
+                    "file_hash": file_hash,
+                    "file_size": file_size,
+                    "file_name": file_name,
+                    "created_at": datetime.datetime.utcnow()
+                }},
+                upsert=True
+            )
+            logger.debug(f"Saved file origin for bin_message_id {bin_message_id}")
+        except Exception as e:
+            logger.error(f"Error saving file origin: {e}", exc_info=True)
+
+    async def get_file_origin(self, bin_message_id: int) -> Optional[Dict[str, Any]]:
+        try:
+            return await self.file_origin_col.find_one({"bin_message_id": bin_message_id})
+        except Exception as e:
+            logger.error(f"Error getting file origin: {e}", exc_info=True)
+            return None
+
+    async def get_file_origin_by_hash(self, file_hash: str) -> Optional[Dict[str, Any]]:
+        try:
+            return await self.file_origin_col.find_one({"file_hash": file_hash})
+        except Exception as e:
+            logger.error(f"Error getting file origin by hash: {e}", exc_info=True)
+            return None
 
     async def close(self):
         if self._client:

@@ -1,13 +1,14 @@
 # src/utils/custom_dl.py
 
 import asyncio
-from typing import Any, AsyncGenerator, Dict
+from typing import Any, AsyncGenerator, Dict, Optional, Tuple
 
 from pyrogram import Client
 from pyrogram.errors import FloodWait, AuthKeyUnregistered
 from pyrogram.types import Message
 
 from src.server.exceptions import FileNotFound
+from src.utils.database import db
 from src.utils.logger import logger
 from src.vars import Var
 
@@ -18,14 +19,14 @@ class ByteStreamer:
         self.client = client
         self.chat_id = int(Var.BIN_CHANNEL)
 
-    async def get_message(self, message_id: int) -> Message:
+    async def get_message(self, message_id: int, chat_id: int = None) -> Message:
+        target_chat = chat_id if chat_id else self.chat_id
         retries = 0
         while retries < 5:
             try:
-                # Use a small internal timeout for the API call itself
-                logger.debug(f"Fetching message for ID {message_id}...")
+                logger.debug(f"Fetching message {message_id} from chat {target_chat}...")
                 message = await asyncio.wait_for(
-                    self.client.get_messages(self.chat_id, message_id), timeout=30)
+                    self.client.get_messages(target_chat, message_id), timeout=30)
                 break
             except asyncio.TimeoutError:
                 logger.debug(f"Timeout fetching message {message_id}, retrying...")
@@ -45,9 +46,44 @@ class ByteStreamer:
             raise FileNotFound(f"Message {message_id} not found")
         return message
 
-    async def stream_file(self, message_id: int, offset: int = 0, limit: int = 0, message: Message = None) -> AsyncGenerator[bytes, None]:
-        if not message:
+    async def get_origin_info(self, message_id: int) -> Optional[Dict[str, Any]]:
+        try:
+            origin = await db.get_file_origin(message_id)
+            if origin:
+                return {
+                    "chat_id": origin.get("origin_chat_id"),
+                    "message_id": origin.get("origin_message_id")
+                }
+        except Exception as e:
+            logger.debug(f"Error getting origin info: {e}")
+        return None
+
+    async def get_message_with_fallback(self, message_id: int) -> Tuple[Message, bool]:
+        origin_info = await self.get_origin_info(message_id)
+        if origin_info:
+            try:
+                message = await self.get_message(
+                    origin_info["message_id"],
+                    origin_info["chat_id"]
+                )
+                logger.info(f"Using origin message for {message_id}")
+                return message, True
+            except Exception as e:
+                logger.warning(f"Could not get origin message: {e}")
+        
+        try:
             message = await self.get_message(message_id)
+            return message, False
+        except Exception as e:
+            raise FileNotFound(f"Message {message_id} not found: {e}")
+    
+    async def stream_file(self, message_id: int, offset: int = 0, limit: int = 0, message: Message = None, use_origin: bool = True) -> AsyncGenerator[bytes, None]:
+        if not message:
+            if use_origin:
+                message, origin_used = await self.get_message_with_fallback(message_id)
+                logger.debug(f"Streaming from {'origin' if origin_used else 'bin'} channel")
+            else:
+                message = await self.get_message(message_id)
         
         
         PART_SIZE = 1024 * 1024
@@ -62,6 +98,21 @@ class ByteStreamer:
                     yield chunk
                 break
             except FloodWait as e:
+                if use_origin and retries == 0:
+                    logger.warning(f"FloodWait from bin channel, trying origin...")
+                    try:
+                        origin_info = await self.get_origin_info(message_id)
+                        if origin_info:
+                            message = await self.get_message(
+                                origin_info["message_id"],
+                                origin_info["chat_id"]
+                            )
+                            logger.info(f"Retrying stream from origin for message {message_id}")
+                            retries += 1
+                            continue
+                    except Exception as origin_err:
+                        logger.warning(f"Could not switch to origin: {origin_err}")
+                
                 wait_time = min(e.value, 30)
                 logger.warning(f"FloodWait: sleeping {wait_time}s, attempt {retries + 1}/{max_retries + 1}")
                 await asyncio.sleep(wait_time)
@@ -92,7 +143,7 @@ class ByteStreamer:
 
     async def get_file_info(self, message_id: int) -> Dict[str, Any]:
         try:
-            message = await self.get_message(message_id)
+            message, origin_used = await self.get_message_with_fallback(message_id)
             return self.get_file_info_sync(message)
         except Exception as e:
             logger.debug(f"Error getting file info for {message_id}: {e}", exc_info=True)

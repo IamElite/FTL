@@ -197,8 +197,10 @@ async def media_delivery(request: web.Request):
             # Use primary streamer for fast metadata with safety timeout
             # Also keep the message object to reuse it for streaming
             logger.debug(f"Fetching message for ID {message_id}...")
-            message = await asyncio.wait_for(
-                primary_streamer.get_message(message_id), timeout=30)
+            message, origin_used = await asyncio.wait_for(
+                primary_streamer.get_message_with_fallback(message_id), timeout=30)
+            if origin_used:
+                logger.info(f"Using origin channel for file info (hash check)")
             file_info = primary_streamer.get_file_info_sync(message)
             logger.debug(f"Message fetched successfully for ID {message_id}")
             if not file_info.get('unique_id'):
