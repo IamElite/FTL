@@ -401,14 +401,16 @@
         video.addEventListener('play', resetHideTimer);
         video.addEventListener('pause', () => videoContainer.classList.remove('idle'));
 
-        // --- Buffering logic ---
+        // --- Adaptive Buffering & Network Logic ---
         const bufferOverlay = document.getElementById('bufferOverlay');
         const netSpeedEl = document.getElementById('netSpeed');
         let speedInterval;
+        let bufferCount = 0;
+        let slowNetwork = false;
+        
         const updateSpeedDisplay = () => {
             const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
             if (conn && conn.downlink) {
-                // conn.downlink Mbps (Megabits per second) mein hota hai. Isko Bytes per second mein convert kar rahe hain.
                 let bytesPerSec = (conn.downlink * 1024 * 1024) / 8;
                 
                 if (bytesPerSec >= 1024 * 1024 * 1024) {
@@ -420,16 +422,40 @@
                 } else {
                     netSpeedEl.textContent = Math.max(0, bytesPerSec).toFixed(0) + ' B/s';
                 }
+                
+                // Adaptive: Slow network detection
+                if (bytesPerSec < 100 * 1024) { // < 100 KB/s = slow
+                    slowNetwork = true;
+                    video.preload = 'none';
+                    console.log('Slow network detected - using minimal preload');
+                } else if (bytesPerSec > 500 * 1024) { // > 500 KB/s = fast
+                    slowNetwork = false;
+                    video.preload = 'auto';
+                    console.log('Fast network - using auto preload');
+                }
             } else {
                 netSpeedEl.textContent = 'Checking...';
             }
         };
+        
         video.addEventListener('waiting', () => {
+            bufferCount++;
             bufferOverlay.classList.add('show');
             updateSpeedDisplay();
             speedInterval = setInterval(updateSpeedDisplay, 1000);
+            
+            // After 2+ buffering, reduce preload for slow networks
+            if (bufferCount > 2 && video.preload !== 'none') {
+                video.preload = 'metadata';
+                console.log('Multiple buffering - trying minimal mode');
+            }
         });
-        video.addEventListener('playing', () => { bufferOverlay.classList.remove('show'); clearInterval(speedInterval); });
+        
+        video.addEventListener('playing', () => { 
+            bufferOverlay.classList.remove('show'); 
+            bufferCount = 0;
+            clearInterval(speedInterval); 
+        });
         video.addEventListener('canplay', () => { bufferOverlay.classList.remove('show'); clearInterval(speedInterval); });
 
         // --- Gestures (Native Integration) ---
