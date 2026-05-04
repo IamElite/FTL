@@ -267,6 +267,8 @@ async def media_delivery(request: web.Request):
             PART_SIZE = 1024 * 1024
             bytes_to_skip = start % PART_SIZE
             last_drain_time = time.time()
+            last_send_time = time.time()
+            CHUNK_INTERVAL = 0.5 
             
             try:
                 async for chunk in streamer.stream_file(
@@ -286,6 +288,14 @@ async def media_delivery(request: web.Request):
                         try:
                             await resp.write(chunk)
                             bytes_sent += len(chunk)
+                            
+                            elapsed = time.time() - last_send_time
+                            if elapsed > 0:
+                                speed = len(chunk) / elapsed
+                                if speed < 500 * 1024:
+                                    await asyncio.sleep(CHUNK_INTERVAL * 0.5)
+                            
+                            last_send_time = time.time()
                             
                             if bytes_sent % (10 * 1024 * 1024) == 0:
                                 await resp.drain()

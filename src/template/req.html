@@ -203,7 +203,7 @@
         </div>
 
         <div class="video-container" id="videoContainer">
-            <video id="player" playsinline preload="metadata" crossorigin>
+            <video id="player" playsinline preload="auto" crossorigin>
                 <source src="{{ src }}" type="{{ mime_type }}">
             </video>
             
@@ -444,10 +444,16 @@
             updateSpeedDisplay();
             speedInterval = setInterval(updateSpeedDisplay, 1000);
             
-            // After 2+ buffering, reduce preload for slow networks
-            if (bufferCount > 2 && video.preload !== 'none') {
-                video.preload = 'metadata';
-                console.log('Multiple buffering - trying minimal mode');
+            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            if (bufferCount > 2) {
+                if (conn && conn.downlink < 0.5) {
+                    video.preload = 'none';
+                    console.log('Slow network detected - using minimal preload');
+                } else {
+                    video.preload = 'auto';
+                    video.currentTime = Math.max(0, video.currentTime - 2);
+                    console.log('Fast network detected - prefetching 2s back');
+                }
             }
         });
         
@@ -456,7 +462,32 @@
             bufferCount = 0;
             clearInterval(speedInterval); 
         });
-        video.addEventListener('canplay', () => { bufferOverlay.classList.remove('show'); clearInterval(speedInterval); });
+        video.addEventListener('canplay', () => { 
+            bufferOverlay.classList.remove('show'); 
+            clearInterval(speedInterval); 
+            
+            if (video.buffered.length > 0) {
+                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                const duration = video.duration;
+                if (bufferedEnd < duration && bufferedEnd - video.currentTime < 10) {
+                    console.log('Low buffer - triggering prefetch');
+                }
+            }
+        });
+        
+        video.addEventListener('progress', () => {
+            if (video.buffered.length > 0) {
+                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                const duration = video.duration;
+                const bufferedPercent = (bufferedEnd / duration) * 100;
+                
+                if (bufferedPercent < 30 && video.readyState < 3) {
+                    video.playbackRate = Math.max(0.5, video.playbackRate * 0.9);
+                } else if (bufferedPercent > 50) {
+                    video.playbackRate = Math.min(2, video.playbackRate * 1.1);
+                }
+            }
+        });
 
         // --- Gestures (Native Integration) ---
         const gestureLeft = document.getElementById('gestureLeft');
