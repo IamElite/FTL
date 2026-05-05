@@ -407,6 +407,7 @@
         let speedInterval;
         let bufferCount = 0;
         let slowNetwork = false;
+        const isPC = !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         const updateSpeedDisplay = () => {
             const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -424,19 +425,26 @@
                 }
                 
                 // Adaptive: Slow network detection
-                if (bytesPerSec < 100 * 1024) { // < 100 KB/s = slow
+                if (bytesPerSec < 100 * 1024) {
                     slowNetwork = true;
                     video.preload = 'none';
-                    console.log('Slow network detected - using minimal preload');
-                } else if (bytesPerSec > 500 * 1024) { // > 500 KB/s = fast
+                    console.log('Slow network - minimal preload');
+                } else if (bytesPerSec > 500 * 1024) {
                     slowNetwork = false;
                     video.preload = 'auto';
-                    console.log('Fast network - using auto preload');
+                    console.log('Fast network - auto preload');
                 }
             } else {
                 netSpeedEl.textContent = 'Checking...';
             }
         };
+        
+        // PC-specific: Reduce aggressive seeking
+        if (isPC) {
+            video.setAttribute('playsinline', '');
+            video.setAttribute('controlslist', 'nodownload');
+            console.log('PC detected - optimizing playback');
+        }
         
         video.addEventListener('waiting', () => {
             bufferCount++;
@@ -448,11 +456,9 @@
             if (bufferCount > 2) {
                 if (conn && conn.downlink < 0.5) {
                     video.preload = 'none';
-                    console.log('Slow network detected - using minimal preload');
                 } else {
                     video.preload = 'auto';
                     video.currentTime = Math.max(0, video.currentTime - 2);
-                    console.log('Fast network detected - prefetching 2s back');
                 }
             }
         });
