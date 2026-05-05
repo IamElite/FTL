@@ -67,8 +67,10 @@
         .c-controls-main { display: flex; justify-content: space-between; align-items: center; }
         .c-left, .c-right { display: flex; align-items: center; gap: 24px; }
         
-        .c-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; opacity: 0.85; }
+        .c-btn { background: none; border: none; color: #fff; font-size: 20px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; opacity: 0.85; position: relative; }
         .c-btn:hover { color: var(--accent); opacity: 1; transform: scale(1.15); }
+        .c-btn.disabled { opacity: 0.3; pointer-events: none; }
+        .c-btn .track-badge { position: absolute; top: -2px; right: -2px; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; }
         
         .c-time { font-size: 13px; font-weight: 500; font-family: 'Inter', monospace; color: #fff; letter-spacing: 0.5px; opacity: 0.9; margin-left: -4px; }
         
@@ -117,14 +119,61 @@
         /* Buffer Overlay with Speed */
         .buffer-overlay {
             position: absolute; inset: 0; z-index: 50;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
             display: none; align-items: center; justify-content: center;
-            flex-direction: column; gap: 16px; pointer-events: none;
+            flex-direction: column; gap: 20px; pointer-events: none;
+            opacity: 0; transition: opacity 0.3s ease;
         }
-        .buffer-overlay.show { display: flex; }
-        .buffer-spinner { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
-        .buffer-text { font-size: 14px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
-        .buffer-text i { color: var(--accent); }
+        .buffer-overlay.show { display: flex; opacity: 1; }
+
+        .buffer-arc {
+            width: 64px; height: 64px; position: relative;
+        }
+        .buffer-arc svg {
+            transform: rotate(-90deg); width: 100%; height: 100%;
+        }
+        .buffer-arc-bg {
+            fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 4;
+        }
+        .buffer-arc-fill {
+            fill: none; stroke: var(--accent); stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 176; stroke-dashoffset: 176;
+            animation: arcSpin 1s linear infinite;
+            transition: stroke-dashoffset 0.3s ease;
+        }
+        @keyframes arcSpin {
+            0% { stroke-dashoffset: 176; transform: rotate(0deg); }
+            100% { stroke-dashoffset: 0; transform: rotate(360deg); }
+        }
+        .buffer-arc-center {
+            position: absolute; inset: 0; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 600; color: var(--accent);
+            font-family: 'Inter', monospace;
+        }
+
+        .buffer-text { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+        .buffer-text i { color: var(--accent); animation: pulse 1.5s ease infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        .buffer-bar-container {
+            width: 180px; height: 4px; background: rgba(255,255,255,0.1);
+            border-radius: 4px; overflow: hidden; position: relative;
+        }
+        .buffer-bar-fill {
+            height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-hover));
+            border-radius: 4px; transition: width 0.3s ease;
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+        .buffer-bar-fill::after {
+            content: ''; position: absolute; right: 0; top: 0;
+            width: 20px; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+            animation: shimmer 1s ease infinite;
+        }
+        @keyframes shimmer { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 0; } }
+
         .buffer-speed { font-size: 12px; color: var(--text3); display: flex; align-items: center; gap: 6px; }
         .buffer-speed .speed-val { color: #4ade80; font-weight: 600; font-family: 'Inter', monospace; }
 
@@ -164,6 +213,37 @@
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .toast-ic { width: 28px; height: 28px; border-radius: 50%; background: rgba(229,9,20,0.15); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; }
         .toast-msg { font-size: 13px; font-weight: 500; }
+
+        /* Track Selector Popup */
+        .track-popup {
+            position: absolute; bottom: 70px; right: 24px; z-index: 30;
+            background: rgba(20,20,20,0.95); backdrop-filter: blur(20px);
+            border: 1px solid var(--border2); border-radius: var(--r2);
+            padding: 8px; min-width: 220px; max-height: 300px;
+            opacity: 0; transform: translateY(10px) scale(0.95);
+            pointer-events: none; transition: all 0.25s var(--ease-out);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+        }
+        .track-popup.show { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+        .track-popup-title {
+            font-size: 11px; font-weight: 600; color: var(--text3);
+            text-transform: uppercase; letter-spacing: 0.08em;
+            padding: 6px 8px 8px; border-bottom: 1px solid var(--border);
+            margin-bottom: 4px;
+        }
+        .track-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 10px; border-radius: var(--r);
+            cursor: pointer; transition: background 0.15s;
+            font-size: 13px; color: var(--text2);
+        }
+        .track-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .track-item.active { color: var(--accent); background: rgba(229,9,20,0.08); }
+        .track-item .track-check { opacity: 0; font-size: 12px; transition: opacity 0.15s; }
+        .track-item.active .track-check { opacity: 1; color: var(--accent); }
+        .track-item .track-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-item .track-lang { font-size: 11px; color: var(--text3); }
+        .track-popup-divider { height: 1px; background: var(--border); margin: 6px 0; }
 
         @media (max-width: 640px) {
             .navbar { padding: 0 16px; } .container { padding: 16px 12px 40px; }
@@ -229,6 +309,8 @@
                         <div class="c-time"><span id="currTime">00:00</span> / <span id="totTime">00:00</span></div>
                     </div>
                     <div class="c-right">
+                        <button class="c-btn" id="audioTrackBtn" title="Audio Tracks"><i class="fas fa-headphones"></i></button>
+                        <button class="c-btn" id="subTrackBtn" title="Subtitles"><i class="fas fa-closed-captioning"></i></button>
                         <button class="c-btn" id="speedBtn" title="Speed"><span style="font-size: 16px; font-weight: bold; font-family: 'Inter';">1x</span></button>
                         <button class="c-btn" id="pipToggleBtn" title="Picture in Picture"><i class="fas fa-clone"></i></button>
                         <button class="c-btn" id="fullscreenBtn"><i class="fas fa-expand"></i></button>
@@ -261,9 +343,24 @@
             </div>
 
             <div class="buffer-overlay" id="bufferOverlay">
-                <div class="buffer-spinner"></div>
+                <div class="buffer-arc">
+                    <svg viewBox="0 0 64 64">
+                        <circle class="buffer-arc-bg" cx="32" cy="32" r="28"></circle>
+                        <circle class="buffer-arc-fill" cx="32" cy="32" r="28"></circle>
+                    </svg>
+                    <div class="buffer-arc-center" id="bufferPercent">0%</div>
+                </div>
                 <div class="buffer-text"><i class="fas fa-circle-notch fa-spin"></i> Buffering...</div>
+                <div class="buffer-bar-container">
+                    <div class="buffer-bar-fill" id="bufferBarFill"></div>
+                </div>
                 <div class="buffer-speed"><i class="fas fa-wifi"></i> Speed: <span class="speed-val" id="netSpeed">-- Mbps</span></div>
+            </div>
+
+            <!-- Track Selector Popup -->
+            <div class="track-popup" id="trackPopup">
+                <div class="track-popup-title" id="trackPopupTitle">Audio Tracks</div>
+                <div id="trackList"></div>
             </div>
         </div>
 
@@ -319,6 +416,14 @@
         const fullIcon = fullscreenBtn.querySelector('i');
         const pipToggleBtn = document.getElementById('pipToggleBtn');
 
+        // Track Selector
+        const audioTrackBtn = document.getElementById('audioTrackBtn');
+        const subTrackBtn = document.getElementById('subTrackBtn');
+        const trackPopup = document.getElementById('trackPopup');
+        const trackPopupTitle = document.getElementById('trackPopupTitle');
+        const trackList = document.getElementById('trackList');
+        let activeTrackType = null;
+
         const formatTime = (sec) => {
             if (isNaN(sec)) return "00:00";
             let m = Math.floor(sec / 60);
@@ -329,7 +434,20 @@
             return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
         };
 
-        video.addEventListener('loadeddata', () => { totTimeEl.textContent = formatTime(video.duration); });
+        video.addEventListener('loadeddata', () => { totTimeEl.textContent = formatTime(video.duration); 
+            setTimeout(() => {
+                if (video.audioTracks && video.audioTracks.length > 1) {
+                    audioTrackBtn.classList.remove('disabled');
+                } else {
+                    audioTrackBtn.classList.add('disabled');
+                }
+                if (video.textTracks && video.textTracks.length > 0) {
+                    subTrackBtn.classList.remove('disabled');
+                } else {
+                    subTrackBtn.classList.add('disabled');
+                }
+            }, 500);
+        });
         video.addEventListener('timeupdate', () => {
             currTimeEl.textContent = formatTime(video.currentTime);
             progressBar.style.width = `${(video.currentTime / video.duration) * 100}%`;
@@ -387,6 +505,84 @@
             speedTxt.textContent = `${speeds[speedIdx]}x`;
         });
 
+        // --- Track Selector (Audio/Subtitle) ---
+        const showTrackPopup = (type) => {
+            if (activeTrackType === type) {
+                trackPopup.classList.remove('show');
+                activeTrackType = null;
+                return;
+            }
+            activeTrackType = type;
+            trackList.innerHTML = '';
+            
+            if (type === 'audio') {
+                trackPopupTitle.textContent = 'Audio Tracks';
+                const audioTracks = video.audioTracks;
+                if (audioTracks && audioTracks.length > 0) {
+                    audioTracks.forEach((track, i) => {
+                        const item = document.createElement('div');
+                        item.className = `track-item${track.enabled ? ' active' : ''}`;
+                        item.innerHTML = `<span class="track-check"><i class="fas fa-check"></i></span><span class="track-name">${track.label || `Track ${i + 1}`}</span><span class="track-lang">${track.language || ''}</span>`;
+                        item.addEventListener('click', () => {
+                            for (let t = 0; t < audioTracks.length; t++) audioTracks[t].enabled = (t === i);
+                            showTrackPopup('audio');
+                            toast(`Audio: ${track.label || 'Track ' + (i+1)}`);
+                        });
+                        trackList.appendChild(item);
+                    });
+                } else {
+                    trackList.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text3);font-size:13px;">No audio tracks detected</div>';
+                }
+            } else {
+                trackPopupTitle.textContent = 'Subtitles';
+                const textTracks = video.textTracks;
+                if (textTracks && textTracks.length > 0) {
+                    const offItem = document.createElement('div');
+                    offItem.className = 'track-item';
+                    offItem.innerHTML = `<span class="track-check"><i class="fas fa-check"></i></span><span class="track-name">Off</span>`;
+                    offItem.addEventListener('click', () => {
+                        for (let t = 0; t < textTracks.length; t++) textTracks[t].mode = 'hidden';
+                        trackPopup.classList.remove('show');
+                        activeTrackType = null;
+                        toast('Subtitles off');
+                    });
+                    trackList.appendChild(offItem);
+                    
+                    const divider = document.createElement('div');
+                    divider.className = 'track-popup-divider';
+                    trackList.appendChild(divider);
+                    
+                    for (let i = 0; i < textTracks.length; i++) {
+                        const track = textTracks[i];
+                        if (track.kind === 'subtitles' || track.kind === 'captions') {
+                            const item = document.createElement('div');
+                            item.className = `track-item${track.mode === 'showing' ? ' active' : ''}`;
+                            item.innerHTML = `<span class="track-check"><i class="fas fa-check"></i></span><span class="track-name">${track.label || `Subtitle ${i + 1}`}</span><span class="track-lang">${track.language || ''}</span>`;
+                            item.addEventListener('click', () => {
+                                for (let t = 0; t < textTracks.length; t++) textTracks[t].mode = (t === i) ? 'showing' : 'hidden';
+                                showTrackPopup('sub');
+                                toast(`Subtitle: ${track.label || 'Track ' + (i+1)}`);
+                            });
+                            trackList.appendChild(item);
+                        }
+                    }
+                } else {
+                    trackList.innerHTML = '<div style="padding:12px;text-align:center;color:var(--text3);font-size:13px;">No subtitles available</div>';
+                }
+            }
+            
+            setTimeout(() => trackPopup.classList.add('show'), 10);
+        };
+
+        audioTrackBtn.addEventListener('click', (e) => { e.stopPropagation(); showTrackPopup('audio'); });
+        subTrackBtn.addEventListener('click', (e) => { e.stopPropagation(); showTrackPopup('sub'); });
+        document.addEventListener('click', (e) => {
+            if (!trackPopup.contains(e.target) && e.target !== audioTrackBtn && e.target !== subTrackBtn) {
+                trackPopup.classList.remove('show');
+                activeTrackType = null;
+            }
+        });
+
         // --- Auto Hide Controls (Netflix Style) ---
         let hideTimer;
         const hideControls = () => { if (!video.paused) videoContainer.classList.add('idle'); };
@@ -404,9 +600,12 @@
         // --- Adaptive Buffering & Network Logic ---
         const bufferOverlay = document.getElementById('bufferOverlay');
         const netSpeedEl = document.getElementById('netSpeed');
+        const bufferPercentEl = document.getElementById('bufferPercent');
+        const bufferBarFill = document.getElementById('bufferBarFill');
         let speedInterval;
         let bufferCount = 0;
         let slowNetwork = false;
+        let bufferUpdateInterval;
         const isPC = !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         const updateSpeedDisplay = () => {
@@ -424,18 +623,24 @@
                     netSpeedEl.textContent = Math.max(0, bytesPerSec).toFixed(0) + ' B/s';
                 }
                 
-                // Adaptive: Slow network detection
                 if (bytesPerSec < 100 * 1024) {
                     slowNetwork = true;
                     video.preload = 'none';
-                    console.log('Slow network - minimal preload');
                 } else if (bytesPerSec > 500 * 1024) {
                     slowNetwork = false;
                     video.preload = 'auto';
-                    console.log('Fast network - auto preload');
                 }
             } else {
                 netSpeedEl.textContent = 'Checking...';
+            }
+        };
+
+        const updateBufferProgress = () => {
+            if (video.duration && video.buffered.length > 0) {
+                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                const bufferedPercent = (bufferedEnd / video.duration) * 100;
+                bufferBarFill.style.width = `${bufferedPercent}%`;
+                bufferPercentEl.textContent = `${Math.round(bufferedPercent)}%`;
             }
         };
         
@@ -450,7 +655,9 @@
             bufferCount++;
             bufferOverlay.classList.add('show');
             updateSpeedDisplay();
+            updateBufferProgress();
             speedInterval = setInterval(updateSpeedDisplay, 1000);
+            bufferUpdateInterval = setInterval(updateBufferProgress, 200);
             
             const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
             if (bufferCount > 2) {
@@ -467,10 +674,12 @@
             bufferOverlay.classList.remove('show'); 
             bufferCount = 0;
             clearInterval(speedInterval); 
+            clearInterval(bufferUpdateInterval);
         });
         video.addEventListener('canplay', () => { 
             bufferOverlay.classList.remove('show'); 
             clearInterval(speedInterval); 
+            clearInterval(bufferUpdateInterval);
             
             if (video.buffered.length > 0) {
                 const bufferedEnd = video.buffered.end(video.buffered.length - 1);
@@ -483,15 +692,7 @@
         
         video.addEventListener('progress', () => {
             if (video.buffered.length > 0) {
-                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-                const duration = video.duration;
-                const bufferedPercent = (bufferedEnd / duration) * 100;
-                
-                if (bufferedPercent < 30 && video.readyState < 3) {
-                    video.playbackRate = Math.max(0.5, video.playbackRate * 0.9);
-                } else if (bufferedPercent > 50) {
-                    video.playbackRate = Math.min(2, video.playbackRate * 1.1);
-                }
+                updateBufferProgress();
             }
         });
 
@@ -567,6 +768,83 @@
             } else if (tapCount === 2) {
                 clearTimeout(tapTimer); tapCount = 0;
                 fullscreenBtn.click(); // Double tap center directly triggers fullscreen (Pro feature)
+            }
+        });
+
+        // --- Keyboard Shortcuts (Desktop) ---
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            switch(e.key.toLowerCase()) {
+                case ' ':
+                case 'k':
+                    e.preventDefault();
+                    togglePlay();
+                    resetHideTimer();
+                    break;
+                case 'arrowleft':
+                    e.preventDefault();
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                    showSeek('bwd', '-10s');
+                    resetHideTimer();
+                    break;
+                case 'arrowright':
+                    e.preventDefault();
+                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                    showSeek('fwd', '+10s');
+                    resetHideTimer();
+                    break;
+                case 'arrowup':
+                    e.preventDefault();
+                    video.volume = Math.min(1, video.volume + 0.1);
+                    updateVolUI();
+                    resetHideTimer();
+                    break;
+                case 'arrowdown':
+                    e.preventDefault();
+                    video.volume = Math.max(0, video.volume - 0.1);
+                    updateVolUI();
+                    resetHideTimer();
+                    break;
+                case 'm':
+                    video.muted = !video.muted;
+                    if(!video.muted && video.volume === 0) { video.volume = 0.5; volSlider.value = 0.5; }
+                    updateVolUI();
+                    resetHideTimer();
+                    break;
+                case 'f':
+                    e.preventDefault();
+                    fullscreenBtn.click();
+                    break;
+                case 'p':
+                    pipToggleBtn.click();
+                    break;
+                case 'a':
+                    showTrackPopup('audio');
+                    resetHideTimer();
+                    break;
+                case 's':
+                    showTrackPopup('sub');
+                    resetHideTimer();
+                    break;
+                case '>':
+                case '.':
+                    if (e.shiftKey) {
+                        speedIdx = (speedIdx + 1) % speeds.length;
+                        video.playbackRate = speeds[speedIdx];
+                        speedTxt.textContent = `${speeds[speedIdx]}x`;
+                        toast(`Speed: ${speeds[speedIdx]}x`);
+                    }
+                    break;
+                case '<':
+                case ',':
+                    if (e.shiftKey) {
+                        speedIdx = (speedIdx - 1 + speeds.length) % speeds.length;
+                        video.playbackRate = speeds[speedIdx];
+                        speedTxt.textContent = `${speeds[speedIdx]}x`;
+                        toast(`Speed: ${speeds[speedIdx]}x`);
+                    }
+                    break;
             }
         });
 
